@@ -4,7 +4,7 @@ def run_manim_code(code):
     with open("generated_code.py", "w") as f:
         f.write(code)
 
-    subprocess.run(["manim", "-pql", "t.py"])
+    subprocess.run(["manim", "-pql", "generated_code.py"])
 
 def main() -> None:
     parser = argparse.ArgumentParser(
