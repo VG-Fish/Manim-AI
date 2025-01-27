@@ -6,12 +6,16 @@
 # ]
 # ///
 
-import requests, argparse, subprocess # type: ignore
+import requests
+import argparse
+import subprocess
+
 
 def run_manim_code(code):
     with open("generated_code.py", "w") as f:
         f.write(code)
     subprocess.run(["manim", "-pql", "generated_code.py"])
+
 
 def main() -> None:
     parser = argparse.ArgumentParser(
@@ -39,8 +43,9 @@ AGAIN, DO NOT OUTPUT ANYTHING OTHER THAN VALID PYTHON + MANIM CODE. This is the 
 
     code: str = response["candidates"][0]["content"]["parts"][0]["text"]
     code = "\n".join(code.splitlines()[1:-1])
-    
+
     run_manim_code(code)
+
 
 if __name__ == "__main__":
     main()
