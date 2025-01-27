@@ -1,9 +1,16 @@
-import requests, argparse, os, subprocess
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#     "manim",
+#     "requests",
+# ]
+# ///
+
+import requests, argparse, subprocess # type: ignore
 
 def run_manim_code(code):
     with open("generated_code.py", "w") as f:
         f.write(code)
-
     subprocess.run(["manim", "-pql", "generated_code.py"])
 
 def main() -> None:
