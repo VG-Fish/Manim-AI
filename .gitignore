@@ -4,3 +4,4 @@ generated_code.py
 *.py.lock
 .DS_Store
 .ruff_cache/
+.python-version
