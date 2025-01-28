@@ -1,3 +1,6 @@
 __pycache__/
 media/
 generated_code.py
+*.py.lock
+.DS_Store
+.ruff_cache/

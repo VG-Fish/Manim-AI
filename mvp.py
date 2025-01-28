@@ -1,6 +1,8 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
+#     "ipython>=8.31.0",
+#     "libcst>=1.6.0",
 #     "manim",
 #     "requests",
 # ]
@@ -10,12 +12,14 @@ import requests
 import argparse
 import subprocess
 from typing import Dict, Any
+from cst_parser import add_interactivity
 
 
 def run_manim_code(code: str) -> None:
     with open("generated_code.py", "w") as f:
         f.write(code)
-    subprocess.run(["manim", "-pql", "generated_code.py"])
+    add_interactivity()
+    subprocess.run(["manim", "generated_code.py", "-p", "--renderer=opengl"])
 
 
 def main() -> None:
