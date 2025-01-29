@@ -54,7 +54,7 @@ class Visitor(cst.CSTTransformer):
                 continue
             
             code_to_add: cst.Module = cst.parse_statement(
-                f"self.add_sound('{self.sound_file_path}', time_offset=0, gain=None)"
+                f"self.add_sound('{self.sound_file_path}')"
             )
             return cst.FlattenSentinel([
                 updated_node,
@@ -71,7 +71,7 @@ def add_interactivity() -> None:
         code: str = f.read()
     code: cst.Module = cst.parse_module(code)
 
-    updated_cst = code.visit(Visitor("KeyClick_2.wav"))
+    updated_cst = code.visit(Visitor("Up_bend_250ms.wav"))
     with open("generated_code.py", "w") as f:
         f.write(updated_cst.code)
 

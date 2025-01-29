@@ -1,7 +1,11 @@
 __pycache__/
 media/
-generated_code.py
-*.py.lock
-.DS_Store
 .ruff_cache/
+
+*.py.lock
 .python-version
+
+.DS_Store
+generated_code.py
+
+*.wav

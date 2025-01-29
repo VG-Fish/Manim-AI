@@ -2,6 +2,7 @@
 # requires-python = ">=3.13"
 # dependencies = [
 #     "ipython>=8.31.0",
+#     "latex>=0.7.0",
 #     "libcst>=1.6.0",
 #     "manim",
 #     "requests",
