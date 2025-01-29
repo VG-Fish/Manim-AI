@@ -9,7 +9,7 @@ import libcst as cst
 from typing import Self
 from libcst.display import dump
 import libcst.matchers as m
-
+from os.path import exists
 
 class GeminiTransformer(cst.CSTTransformer):
     """
@@ -22,10 +22,17 @@ class GeminiTransformer(cst.CSTTransformer):
         debug_file_path: str = "",
         num_new_lines: int = 0,
     ):
-        self.sound_file_path = sound_file_path
-        self.debug = debug
-        self.debug_file_path = debug_file_path
-        self.num_new_lines = num_new_lines
+        self.sound_file_path: str = sound_file_path
+
+        # Debug variables.
+        self.debug: bool = debug
+        self.debug_file_path: str = debug_file_path
+        self.debug_num_new_lines: int = num_new_lines
+
+        # Clear the debug file if it exists.
+        if exists(self.debug_file_path):
+            with open(self.debug_file_path, "w") as f:
+                f.close()
 
     def leave_FunctionDef(
         self: Self, original_node: cst.FunctionDef, updated_node: cst.FunctionDef
@@ -42,6 +49,18 @@ class GeminiTransformer(cst.CSTTransformer):
         )
         return updated_node.with_changes(body=new_body)
 
+    def visit_SimpleStatementLine(self, node: cst.SimpleStatementLine) -> bool | None:
+        """
+        This function writes the CST nodes to the debug file.
+        """
+        if not self.debug:
+            return
+        
+        with open(self.debug_file_path, "a") as f:
+            for child in node.children:
+                f.write(dump(child))
+                f.write("\n" * self.debug_num_new_lines)
+
     def leave_SimpleStatementLine(
         self: Self,
         original_node: cst.SimpleStatementLine,
@@ -51,12 +70,6 @@ class GeminiTransformer(cst.CSTTransformer):
         This function adds `self.add_sound(...)` after certain Manim function calls, such as `Create()` or `FadeOut()`.
         """
         for child in original_node.children:
-            # For debugging purposes.
-            if self.debug:
-                with open(self.debug_file_path, "w") as f:
-                    f.write(dump(child))
-                    f.write("\n" * self.num_new_lines)
-
             # These if statement(s) match specific nodes to add `self.add_sound(...)` after lines containing certain Manim function calls.
             if m.matches(
                 child,

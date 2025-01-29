@@ -9,3 +9,5 @@ media/
 generated_code.py
 
 *.wav
+
+*parser_debug.txt
