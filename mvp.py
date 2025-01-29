@@ -38,7 +38,7 @@ def main() -> None:
     https://nova-motors-server.vercel.app/gemini?prompt=
 Your sole purpose is to convert natural language into Manim (a Python library for creating mathematical animations) code. 
 You will be given some text and must write Manim code to the best of your abilities. DO NOT OUTPUT MARKDOWN CODE, JUST PYTHON CODE.
-AGAIN, DO NOT OUTPUT ANYTHING OTHER THAN VALID PYTHON + MANIM CODE. This is the prompt: {args.prompt}.
+AGAIN, DO NOT OUTPUT ANYTHING OTHER THAN VALID PYTHON + MANIM CODE. This is the prompt: {args.prompt}. Remember, DON'T code bugs.
 """
 
     print(
