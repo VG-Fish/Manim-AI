@@ -48,9 +48,10 @@ class GeminiTransformer(cst.CSTTransformer):
         if original_node.name.value != "construct":
             return super().leave_FunctionDef(original_node, updated_node)
 
-        code_to_add: cst.Module = cst.parse_statement("self.interactive_embed()")
+        pygame_code: cst.SimpleStatementLine = cst.parse_statement("pygame.mixer.init()")
+        interactive_code: cst.SimpleStatementLine = cst.parse_statement("self.interactive_embed()")
         new_body: cst.IndentedBlock = cst.IndentedBlock(
-            body=[*updated_node.body.body, code_to_add]
+            body=[pygame_code, *updated_node.body.body, interactive_code]
         )
         return updated_node.with_changes(body=new_body)
 
@@ -91,7 +92,7 @@ class GeminiTransformer(cst.CSTTransformer):
                     ),
                 ):
                     sound_code: cst.SimpleStatementLine = cst.parse_statement(
-                        f"self.renderer.file_writer.add_sound('{sound_file_path}', self.renderer.time)"
+                        f"pygame.mixer.Sound('{sound_file_path}').play()"
                     )
                     return cst.FlattenSentinel([updated_node, sound_code])
                 elif m.matches(
