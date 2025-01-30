@@ -25,14 +25,14 @@ class GeminiTransformer(cst.CSTTransformer):
         sound_indicator_nodes: Dict[str, Tuple[str, float]],
         debug: bool = False,
         debug_file_path: str = "",
-        num_new_lines: int = 1,
+        debug_num_new_lines: int = 1,
     ):
         self.sound_indicator_nodes: Dict[str, Tuple[str, float]] = sound_indicator_nodes
 
         # Debug variables.
         self.debug: bool = debug
         self.debug_file_path: str = debug_file_path
-        self.debug_num_new_lines: int = num_new_lines
+        self.debug_num_new_lines: int = debug_num_new_lines
 
         # Clear the debug file if it exists.
         if exists(self.debug_file_path):
@@ -82,9 +82,7 @@ class GeminiTransformer(cst.CSTTransformer):
         """
         for child in original_node.children:
             # This for loop matches specific nodes to add `self.add_sound(...)` after lines containing certain Manim function calls.
-            for idx, (node, (sound_file_path, intensity)) in enumerate(
-                self.sound_indicator_nodes.items()
-            ):
+            for node, (sound_file_path, intensity) in self.sound_indicator_nodes.items():
                 if self.sound_indicator_nodes.get("Create", "") and m.matches(
                     child,
                     m.Expr(
@@ -98,9 +96,9 @@ class GeminiTransformer(cst.CSTTransformer):
                     ),
                 ):
                     sound_code: cst.SimpleStatementLine = cst.parse_module(
-                        f"sound_{idx} = pygame.mixer.Sound('{sound_file_path}')\n" +
-                        f"sound_{idx}.set_volume({intensity})\n" +
-                        f"sound_{idx}.play()\n"
+                        f"\nsound = pygame.mixer.Sound('{sound_file_path}')\n"
+                        + f"sound.set_volume({intensity})\n"
+                        + f"sound.play()\n\n"
                     )
                     return cst.FlattenSentinel([updated_node, sound_code])
                 elif m.matches(
@@ -140,8 +138,8 @@ def add_interactivity() -> None:
         GeminiTransformer(
             sound_indicator_nodes,
             debug,
-            "parser_debug.txt" if debug else None,
-            3 if debug else None,
+            "parser_debug.txt" if debug else "",
+            3 if debug else 1,
         )
     )
     with open("generated_code.py", "w") as f:
