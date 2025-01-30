@@ -123,6 +123,7 @@ def add_interactivity() -> None:
     sound_indicator_nodes: Dict[str, str] = {
         "Create": "Up_bend_250ms.wav",
         "Rotate": "Up_bend_250ms.wav",
+        "FadeOut": "Up_bend_250ms.wav"
     }
     updated_cst = code.visit(
         GeminiTransformer(sound_indicator_nodes, True, "parser_debug.txt", 3)
