@@ -73,6 +73,7 @@ class GeminiTransformer(cst.CSTTransformer):
     ) -> cst.SimpleStatementLine:
         """
         This function adds `self.add_sound(...)` after certain Manim function calls, such as `Create()` or `FadeOut()`.
+        Additionally, this function adds `import pygame` to the top of the file.
         """
         for child in original_node.children:
             # This for loop matches specific nodes to add `self.add_sound(...)` after lines containing certain Manim function calls.
@@ -93,6 +94,17 @@ class GeminiTransformer(cst.CSTTransformer):
                         f"self.renderer.file_writer.add_sound('{sound_file_path}', self.renderer.time)"
                     )
                     return cst.FlattenSentinel([updated_node, sound_code])
+                elif m.matches(
+                    child,
+                    m.OneOf(
+                        m.ImportFrom(module=m.Name(value="manim")),
+                        m.Import(names=m.ImportAlias(name=m.Name(value="manim"))),
+                    ),
+                ):
+                    pygame_code: cst.SimpleStatementLine = cst.parse_statement(
+                        f"import pygame"
+                    )
+                    return cst.FlattenSentinel([updated_node, pygame_code])
 
         return super().leave_SimpleStatementLine(original_node, updated_node)
 
@@ -104,6 +116,9 @@ def add_interactivity() -> None:
     with open("generated_code.py", "r") as f:
         code: str = f.read()
     code: cst.Module = cst.parse_module(code)
+
+    with open("d.txt", "w") as f:
+        f.write(dump(code))
 
     sound_indicator_nodes: Dict[str, str] = {
         "Create": "Up_bend_250ms.wav",
