@@ -6,16 +6,20 @@
 # ///
 
 import libcst as cst
-from typing import Self
-from libcst.display import dump
 import libcst.matchers as m
+from libcst.display import dump
+
 from os.path import exists
+
 from typing import Dict
+from typing import Self
+
 
 class GeminiTransformer(cst.CSTTransformer):
     """
-    A class to add code to the Gemini generated code.
+    A class to add code to a Gemini generated code file.
     """
+
     def __init__(
         self: Self,
         sound_indicator_nodes: Dict[str, str],
@@ -23,7 +27,6 @@ class GeminiTransformer(cst.CSTTransformer):
         debug_file_path: str = "",
         num_new_lines: int = 1,
     ):
-        # TODO: add these changes.
         self.sound_indicator_nodes: Dict[str, str] = sound_indicator_nodes
 
         # Debug variables.
@@ -57,7 +60,7 @@ class GeminiTransformer(cst.CSTTransformer):
         """
         if not self.debug:
             return
-        
+
         with open(self.debug_file_path, "a") as f:
             for child in node.children:
                 f.write(dump(child))
@@ -90,7 +93,7 @@ class GeminiTransformer(cst.CSTTransformer):
                         f"self.add_sound('{sound_file_path}')"
                     )
                     return cst.FlattenSentinel([updated_node, code_to_add])
-    
+
         return super().leave_SimpleStatementLine(original_node, updated_node)
 
 
@@ -105,9 +108,11 @@ def add_interactivity() -> None:
     sound_indicator_nodes: Dict[str, str] = {
         "Create": "Up_bend_250ms.wav",
         "Rotate": "Up_bend_250ms.wav",
-        "FadeOut": "Up_bend_250ms.wav"
+        "FadeOut": "Up_bend_250ms.wav",
     }
-    updated_cst = code.visit(GeminiTransformer(sound_indicator_nodes, True, "parser_debug.txt", 3))
+    updated_cst = code.visit(
+        GeminiTransformer(sound_indicator_nodes, True, "parser_debug.txt", 3)
+    )
     with open("generated_code.py", "w") as f:
         f.write(updated_cst.code)
 

@@ -45,7 +45,13 @@ AGAIN, DO NOT OUTPUT ANYTHING OTHER THAN VALID PYTHON + MANIM CODE. This is the 
     print(
         "Calling Google Gemini now. Please note that since I'm hosting my Flask app on Vercel, there might be a cold start, so this may take a while.\n"
     )
-    response: Dict[str, Any] = requests.get(GEMINI_URL).json()
+    response: requests.Response | Dict[str, str] = requests.get(GEMINI_URL)
+
+    if not response:
+        print("Couldn't connect to the backend to generate the code.")
+        return
+    
+    response = response.json()
 
     code: str = response["candidates"][0]["content"]["parts"][0]["text"]
     code = "\n".join(code.splitlines()[1:-1])
