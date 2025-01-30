@@ -89,10 +89,10 @@ class GeminiTransformer(cst.CSTTransformer):
                         )
                     ),
                 ):
-                    code_to_add: cst.Module = cst.parse_statement(
-                        f"self.add_sound('{sound_file_path}')"
+                    sound_code: cst.SimpleStatementLine = cst.parse_statement(
+                        f"self.renderer.file_writer.add_sound('{sound_file_path}', self.renderer.time)"
                     )
-                    return cst.FlattenSentinel([updated_node, code_to_add])
+                    return cst.FlattenSentinel([updated_node, sound_code])
 
         return super().leave_SimpleStatementLine(original_node, updated_node)
 
@@ -108,7 +108,6 @@ def add_interactivity() -> None:
     sound_indicator_nodes: Dict[str, str] = {
         "Create": "Up_bend_250ms.wav",
         "Rotate": "Up_bend_250ms.wav",
-        "FadeOut": "Up_bend_250ms.wav",
     }
     updated_cst = code.visit(
         GeminiTransformer(sound_indicator_nodes, True, "parser_debug.txt", 3)
