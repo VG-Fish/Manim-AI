@@ -11,7 +11,7 @@ from libcst.display import dump
 
 from os.path import exists
 
-from typing import Dict
+from typing import Dict, Tuple
 from typing import Self
 
 
@@ -22,12 +22,12 @@ class GeminiTransformer(cst.CSTTransformer):
 
     def __init__(
         self: Self,
-        sound_indicator_nodes: Dict[str, str],
+        sound_indicator_nodes: Dict[str, Tuple[str, float]],
         debug: bool = False,
         debug_file_path: str = "",
         num_new_lines: int = 1,
     ):
-        self.sound_indicator_nodes: Dict[str, str] = sound_indicator_nodes
+        self.sound_indicator_nodes: Dict[str, Tuple[str, float]] = sound_indicator_nodes
 
         # Debug variables.
         self.debug: bool = debug
@@ -48,8 +48,12 @@ class GeminiTransformer(cst.CSTTransformer):
         if original_node.name.value != "construct":
             return super().leave_FunctionDef(original_node, updated_node)
 
-        pygame_code: cst.SimpleStatementLine = cst.parse_statement("pygame.mixer.init()")
-        interactive_code: cst.SimpleStatementLine = cst.parse_statement("self.interactive_embed()")
+        pygame_code: cst.SimpleStatementLine = cst.parse_statement(
+            "pygame.mixer.init()"
+        )
+        interactive_code: cst.SimpleStatementLine = cst.parse_statement(
+            "self.interactive_embed()"
+        )
         new_body: cst.IndentedBlock = cst.IndentedBlock(
             body=[pygame_code, *updated_node.body.body, interactive_code]
         )
@@ -78,7 +82,9 @@ class GeminiTransformer(cst.CSTTransformer):
         """
         for child in original_node.children:
             # This for loop matches specific nodes to add `self.add_sound(...)` after lines containing certain Manim function calls.
-            for node, sound_file_path in self.sound_indicator_nodes.items():
+            for idx, (node, (sound_file_path, intensity)) in enumerate(
+                self.sound_indicator_nodes.items()
+            ):
                 if self.sound_indicator_nodes.get("Create", "") and m.matches(
                     child,
                     m.Expr(
@@ -91,8 +97,10 @@ class GeminiTransformer(cst.CSTTransformer):
                         )
                     ),
                 ):
-                    sound_code: cst.SimpleStatementLine = cst.parse_statement(
-                        f"pygame.mixer.Sound('{sound_file_path}').play()"
+                    sound_code: cst.SimpleStatementLine = cst.parse_module(
+                        f"sound_{idx} = pygame.mixer.Sound('{sound_file_path}')\n" +
+                        f"sound_{idx}.set_volume({intensity})\n" +
+                        f"sound_{idx}.play()\n"
                     )
                     return cst.FlattenSentinel([updated_node, sound_code])
                 elif m.matches(
@@ -118,16 +126,23 @@ def add_interactivity() -> None:
         code: str = f.read()
     code: cst.Module = cst.parse_module(code)
 
-    with open("d.txt", "w") as f:
-        f.write(dump(code))
+    debug = True
+    if debug:
+        with open("code_debug.txt", "w") as f:
+            f.write(dump(code))
 
     sound_indicator_nodes: Dict[str, str] = {
-        "Create": "Up_bend_250ms.wav",
-        "Rotate": "Up_bend_250ms.wav",
-        "FadeOut": "Up_bend_250ms.wav"
+        "Create": ("Up_bend_250ms.wav", 1),
+        "Rotate": ("Up_bend_250ms.wav", 1),
+        "FadeOut": ("Up_bend_250ms.wav", 1),
     }
     updated_cst = code.visit(
-        GeminiTransformer(sound_indicator_nodes, True, "parser_debug.txt", 3)
+        GeminiTransformer(
+            sound_indicator_nodes,
+            debug,
+            "parser_debug.txt" if debug else None,
+            3 if debug else None,
+        )
     )
     with open("generated_code.py", "w") as f:
         f.write(updated_cst.code)
