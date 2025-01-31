@@ -26,7 +26,10 @@ class GeminiTransformer(cst.CSTTransformer):
         debug: bool = False,
         debug_file_path: str = "",
         debug_num_new_lines: int = 1,
-    ):
+    ) -> None:
+        """
+        This function initializes the class.
+        """
         self.sound_indicator_nodes: Dict[str, Tuple[str, float]] = sound_indicator_nodes
 
         # Debug variables.
@@ -47,15 +50,12 @@ class GeminiTransformer(cst.CSTTransformer):
         """
         if original_node.name.value != "construct":
             return super().leave_FunctionDef(original_node, updated_node)
-
-        pygame_code: cst.SimpleStatementLine = cst.parse_statement(
-            "pygame.mixer.init()"
-        )
+        
         interactive_code: cst.SimpleStatementLine = cst.parse_statement(
             "self.interactive_embed()"
         )
         new_body: cst.IndentedBlock = cst.IndentedBlock(
-            body=[pygame_code, *updated_node.body.body, interactive_code]
+            body=[*updated_node.body.body, interactive_code]
         )
         return updated_node.with_changes(body=new_body)
 
@@ -78,12 +78,12 @@ class GeminiTransformer(cst.CSTTransformer):
     ) -> cst.SimpleStatementLine:
         """
         This function adds `self.add_sound(...)` after certain Manim function calls, such as `Create()` or `FadeOut()`.
-        Additionally, this function adds `import pygame` to the top of the file.
         """
         for child in original_node.children:
             # This for loop matches specific nodes to add `self.add_sound(...)` after lines containing certain Manim function calls.
             for node, (sound_file_path, intensity) in self.sound_indicator_nodes.items():
-                if self.sound_indicator_nodes.get("Create", "") and m.matches(
+                # First type of function call to match for.
+                if m.matches(
                     child,
                     m.Expr(
                         value=m.Call(
@@ -95,23 +95,10 @@ class GeminiTransformer(cst.CSTTransformer):
                         )
                     ),
                 ):
-                    sound_code: cst.SimpleStatementLine = cst.parse_module(
-                        f"\nsound = pygame.mixer.Sound('{sound_file_path}')\n"
-                        + f"sound.set_volume({intensity})\n"
-                        + f"sound.play()\n\n"
+                    sound_code: cst.SimpleStatementLine = cst.parse_statement(
+                        f"self.add_sound('{sound_file_path}', {intensity})"
                     )
-                    return cst.FlattenSentinel([updated_node, sound_code])
-                elif m.matches(
-                    child,
-                    m.OneOf(
-                        m.ImportFrom(module=m.Name(value="manim")),
-                        m.Import(names=m.ImportAlias(name=m.Name(value="manim"))),
-                    ),
-                ):
-                    pygame_code: cst.SimpleStatementLine = cst.parse_statement(
-                        f"import pygame"
-                    )
-                    return cst.FlattenSentinel([updated_node, pygame_code])
+                    return cst.FlattenSentinel([sound_code, updated_node])
 
         return super().leave_SimpleStatementLine(original_node, updated_node)
 
@@ -124,24 +111,25 @@ def add_interactivity() -> None:
         code: str = f.read()
     code: cst.Module = cst.parse_module(code)
 
-    debug = True
+    debug: bool = True
     if debug:
         with open("code_debug.txt", "w") as f:
             f.write(dump(code))
 
     sound_indicator_nodes: Dict[str, str] = {
-        "Create": ("Up_bend_250ms.wav", 1),
-        "Rotate": ("Up_bend_250ms.wav", 1),
-        "FadeOut": ("Up_bend_250ms.wav", 1),
+        "Create": ("click.wav", 1),
+        "Rotate": ("click.wav", 1),
+        "FadeOut": ("click.wav", 1),
     }
-    updated_cst = code.visit(
+    updated_cst: cst.Module = code.visit(
         GeminiTransformer(
             sound_indicator_nodes,
             debug,
-            "parser_debug.txt" if debug else "",
-            3 if debug else 1,
+            "parser_debug.txt",
+            3,
         )
     )
+
     with open("generated_code.py", "w") as f:
         f.write(updated_cst.code)
 

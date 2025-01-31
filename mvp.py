@@ -20,8 +20,15 @@ from cst_parser import add_interactivity
 def run_manim_code(code: str) -> None:
     with open("generated_code.py", "w") as f:
         f.write(code)
+    
+    print("Adding interactivity...")
     add_interactivity()
-    run(["manim", "generated_code.py", "-p", "--renderer=opengl"])
+
+    print("Running the scene...")
+    try:
+        run(["manim", "generated_code.py", "-p", "--renderer=opengl"])
+    except FileNotFoundError:
+        print("Creating the interactive scene failed!")
 
 
 def main() -> None:
@@ -57,6 +64,7 @@ AGAIN, DO NOT OUTPUT ANYTHING OTHER THAN VALID PYTHON + MANIM CODE. This is the 
     code: str = response["candidates"][0]["content"]["parts"][0]["text"]
     code = "\n".join(code.splitlines()[1:-1])
 
+    print("Creating the interactive scene...")
     run_manim_code(code)
 
 
