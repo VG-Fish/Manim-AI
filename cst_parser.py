@@ -14,6 +14,16 @@ from os.path import exists
 from typing import Dict, Tuple
 from typing import Self
 
+import wave
+
+
+def get_audio_file_duration(file_path: str) -> float:
+    with wave.open(file_path, "r") as f:
+        frames: int = f.getnframes()
+        rate: int = f.getframerate()
+        duration = frames / rate
+        return round(duration, 2)
+
 
 class GeminiTransformer(cst.CSTTransformer):
     """
@@ -50,7 +60,7 @@ class GeminiTransformer(cst.CSTTransformer):
         """
         if original_node.name.value != "construct":
             return super().leave_FunctionDef(original_node, updated_node)
-        
+
         interactive_code: cst.SimpleStatementLine = cst.parse_statement(
             "self.interactive_embed()"
         )
@@ -81,7 +91,10 @@ class GeminiTransformer(cst.CSTTransformer):
         """
         for child in original_node.children:
             # This for loop matches specific nodes to add `self.add_sound(...)` after lines containing certain Manim function calls.
-            for node, (sound_file_path, intensity) in self.sound_indicator_nodes.items():
+            for node, (
+                sound_file_path,
+                intensity,
+            ) in self.sound_indicator_nodes.items():
                 # First type of function call to match for.
                 if m.matches(
                     child,
@@ -95,6 +108,21 @@ class GeminiTransformer(cst.CSTTransformer):
                         )
                     ),
                 ):
+                    run_time_arg = cst.Arg(
+                        value=cst.Float(
+                            value=str(get_audio_file_duration(sound_file_path))
+                        ),
+                        keyword=cst.Name(value="run_time"),
+                    )
+                    updated_args = updated_node.body[0].value.args + (run_time_arg,)
+                    updated_call = updated_node.body[0].value.with_changes(
+                        args=updated_args
+                    )
+                    updated_body = [
+                        updated_node.body[0].with_changes(value=updated_call)
+                    ] + list(updated_node.body[1:])
+                    updated_node = updated_node.with_changes(body=updated_body)
+
                     sound_code: cst.SimpleStatementLine = cst.parse_statement(
                         f"self.add_sound('{sound_file_path}', {intensity})"
                     )
