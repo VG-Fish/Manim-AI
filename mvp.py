@@ -20,7 +20,7 @@ from cst_parser import add_interactivity
 def run_manim_code(code: str) -> None:
     with open("generated_code.py", "w") as f:
         f.write(code)
-    
+
     print("Adding interactivity...")
     add_interactivity()
 
@@ -43,22 +43,23 @@ def main() -> None:
     )
     args: Namespace = parser.parse_args()
 
-    GEMINI_URL: str = f"""
+    # The multiline quote is unindented to provide more space to write.
+    GEMINI_URL: str = (
+        f"""
 https://nova-motors-server.vercel.app/gemini?prompt=
 Your sole purpose is to convert natural language into Manim (a Python library for creating mathematical animations) code. 
-You will be given some text and must write Manim code to the best of your abilities. DO NOT OUTPUT MARKDOWN CODE, JUST PYTHON CODE.
-AGAIN, DO NOT OUTPUT ANYTHING OTHER THAN VALID PYTHON + MANIM CODE. This is the prompt: {args.prompt}. Remember, DON'T code bugs.
-"""
-
-    print(
-        "Calling Google Gemini now. Please note that since I'm hosting my Flask app on Vercel, there might be a cold start, so this may take a while.\n"
+You will be given some text and must write valid Manim code to the best of your abilities. 
+This is the prompt: \"{args.prompt}\" Remember, DON'T code bugs and SOLELY OUTPUT PYTHON CODE--NOT PLAINTEXT OR MARKDOWN.
+    """
     )
+
+    print("Getting response...")
     response: Response | Dict[str, str] = get(GEMINI_URL)
 
     if not response:
         print("Couldn't connect to the backend to generate the code.")
         return
-    
+
     response = response.json()
 
     code: str = response["candidates"][0]["content"]["parts"][0]["text"]

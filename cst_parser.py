@@ -8,17 +8,17 @@
 import libcst as cst
 import libcst.matchers as m
 from libcst.display import dump
+from libcst import RemoveFromParent
 
 from os.path import exists
 
-from typing import Dict, Tuple
-from typing import Self
+from typing import Dict, Tuple, Self, Union
 
 import wave
 
 
-def get_audio_file_duration(file_path: str) -> float:
-    with wave.open(file_path, "r") as f:
+def get_audio_file_duration(sound_file_path: str) -> float:
+    with wave.open(sound_file_path, "r") as f:
         frames: int = f.getnframes()
         rate: int = f.getframerate()
         duration = frames / rate
@@ -69,18 +69,6 @@ class GeminiTransformer(cst.CSTTransformer):
         )
         return updated_node.with_changes(body=new_body)
 
-    def visit_SimpleStatementLine(self, node: cst.SimpleStatementLine) -> bool | None:
-        """
-        This function writes the CST nodes to the debug file.
-        """
-        if not self.debug:
-            return
-
-        with open(self.debug_file_path, "a") as f:
-            for child in node.children:
-                f.write(dump(child))
-                f.write("\n" * self.debug_num_new_lines)
-
     def leave_SimpleStatementLine(
         self: Self,
         original_node: cst.SimpleStatementLine,
@@ -90,7 +78,8 @@ class GeminiTransformer(cst.CSTTransformer):
         This function adds `self.add_sound(...)` after certain Manim function calls, such as `Create()` or `FadeOut()`.
         """
         for child in original_node.children:
-            # This for loop matches specific nodes to add `self.add_sound(...)` after lines containing certain Manim function calls.
+            # This for loop matches specific nodes to add `self.add_sound(...)` after lines containing
+            # certain Manim function calls.
             for node, (
                 sound_file_path,
                 intensity,
@@ -114,13 +103,17 @@ class GeminiTransformer(cst.CSTTransformer):
                         ),
                         keyword=cst.Name(value="run_time"),
                     )
-                    updated_args = updated_node.body[0].value.args + (run_time_arg,)
-                    updated_call = updated_node.body[0].value.with_changes(
+                    node_of_interest = updated_node.body[0]
+                    updated_args = node_of_interest.value.args + (run_time_arg,)
+
+                    updated_call = node_of_interest.value.with_changes(
                         args=updated_args
                     )
+
                     updated_body = [
-                        updated_node.body[0].with_changes(value=updated_call)
+                        node_of_interest.with_changes(value=updated_call)
                     ] + list(updated_node.body[1:])
+
                     updated_node = updated_node.with_changes(body=updated_body)
 
                     sound_code: cst.SimpleStatementLine = cst.parse_statement(
@@ -129,6 +122,20 @@ class GeminiTransformer(cst.CSTTransformer):
                     return cst.FlattenSentinel([sound_code, updated_node])
 
         return super().leave_SimpleStatementLine(original_node, updated_node)
+    
+    def leave_Arg(self: Self, original_node: cst.Arg, updated_node: cst.Arg) -> Union[cst.Arg, cst.RemovalSentinel]:
+        """
+        Removes run_time=[value] from function calls for run_time=[sound_file_length] to be added later.
+        """
+        if m.matches(
+            original_node,
+            m.Arg(
+                value=m.Integer(),
+                keyword=m.Name(value="run_time"),
+            )
+        ):
+            return RemoveFromParent()
+        return updated_node
 
 
 def add_interactivity() -> None:
@@ -141,7 +148,7 @@ def add_interactivity() -> None:
 
     debug: bool = True
     if debug:
-        with open("code_debug.txt", "w") as f:
+        with open("cst_full_debug.txt", "w") as f:
             f.write(dump(code))
 
     sound_indicator_nodes: Dict[str, str] = {
@@ -153,7 +160,7 @@ def add_interactivity() -> None:
         GeminiTransformer(
             sound_indicator_nodes,
             debug,
-            "parser_debug.txt",
+            "cst_simple_statement_lines_debug.txt",
             3,
         )
     )
