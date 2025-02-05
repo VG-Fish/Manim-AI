@@ -10,14 +10,15 @@ import libcst.matchers as m
 from libcst.display import dump
 from libcst import RemoveFromParent
 
-from os.path import exists
-
 from typing import Dict, Tuple, Self, Union
 
 import wave
 
 
 def get_audio_file_duration(sound_file_path: str) -> float:
+    """
+    Returns the length of the given sound file path.
+    """
     with wave.open(sound_file_path, "r") as f:
         frames: int = f.getnframes()
         rate: int = f.getframerate()
@@ -33,24 +34,11 @@ class GeminiTransformer(cst.CSTTransformer):
     def __init__(
         self: Self,
         sound_indicator_nodes: Dict[str, Tuple[str, float]],
-        debug: bool = False,
-        debug_file_path: str = "",
-        debug_num_new_lines: int = 1,
     ) -> None:
         """
         This function initializes the class.
         """
         self.sound_indicator_nodes: Dict[str, Tuple[str, float]] = sound_indicator_nodes
-
-        # Debug variables.
-        self.debug: bool = debug
-        self.debug_file_path: str = debug_file_path
-        self.debug_num_new_lines: int = debug_num_new_lines
-
-        # Clear the debug file if it exists.
-        if exists(self.debug_file_path):
-            with open(self.debug_file_path, "w") as f:
-                f.close()
 
     def leave_FunctionDef(
         self: Self, original_node: cst.FunctionDef, updated_node: cst.FunctionDef
@@ -73,7 +61,7 @@ class GeminiTransformer(cst.CSTTransformer):
         self: Self,
         original_node: cst.SimpleStatementLine,
         updated_node: cst.SimpleStatementLine,
-    ) -> cst.SimpleStatementLine:
+    ) -> Union[cst.SimpleStatementLine, cst.FlattenSentinel]:
         """
         This function adds `self.add_sound(...)` after certain Manim function calls, such as `Create()` or `FadeOut()`.
         """
@@ -89,6 +77,14 @@ class GeminiTransformer(cst.CSTTransformer):
                     child,
                     m.Expr(
                         value=m.Call(
+                            func=m.Attribute(
+                                value=m.Name(
+                                  value='self',
+                                ),
+                                attr=m.Name(
+                                  value='play',
+                                ),
+                              ),
                             args=[
                                 m.ZeroOrMore(m.Arg()),
                                 m.Arg(value=m.Call(func=m.Name(value=node))),
@@ -122,8 +118,10 @@ class GeminiTransformer(cst.CSTTransformer):
                     return cst.FlattenSentinel([sound_code, updated_node])
 
         return super().leave_SimpleStatementLine(original_node, updated_node)
-    
-    def leave_Arg(self: Self, original_node: cst.Arg, updated_node: cst.Arg) -> Union[cst.Arg, cst.RemovalSentinel]:
+
+    def leave_Arg(
+        self: Self, original_node: cst.Arg, updated_node: cst.Arg
+    ) -> Union[cst.Arg, cst.RemovalSentinel]:
         """
         Removes run_time=[value] from function calls for run_time=[sound_file_length] to be added later.
         """
@@ -132,7 +130,7 @@ class GeminiTransformer(cst.CSTTransformer):
             m.Arg(
                 value=m.Integer(),
                 keyword=m.Name(value="run_time"),
-            )
+            ),
         ):
             return RemoveFromParent()
         return updated_node
@@ -143,8 +141,8 @@ def add_interactivity() -> None:
     Adds interactivity to the generated Gemini code.
     """
     with open("generated_code.py", "r") as f:
-        code: str = f.read()
-    code: cst.Module = cst.parse_module(code)
+        code: Union[str, cst.Module] = f.read()
+    code = cst.parse_module(code)
 
     debug: bool = True
     if debug:
@@ -157,12 +155,7 @@ def add_interactivity() -> None:
         "FadeOut": ("click.wav", 1),
     }
     updated_cst: cst.Module = code.visit(
-        GeminiTransformer(
-            sound_indicator_nodes,
-            debug,
-            "cst_simple_statement_lines_debug.txt",
-            3,
-        )
+        GeminiTransformer(sound_indicator_nodes)
     )
 
     with open("generated_code.py", "w") as f:

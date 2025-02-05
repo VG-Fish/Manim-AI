@@ -44,14 +44,12 @@ def main() -> None:
     args: Namespace = parser.parse_args()
 
     # The multiline quote is unindented to provide more space to write.
-    GEMINI_URL: str = (
-        f"""
+    GEMINI_URL: str = f"""
 https://nova-motors-server.vercel.app/gemini?prompt=
 Your sole purpose is to convert natural language into Manim (a Python library for creating mathematical animations) code. 
 You will be given some text and must write valid Manim code to the best of your abilities. 
 This is the prompt: \"{args.prompt}\" Remember, DON'T code bugs and SOLELY OUTPUT PYTHON CODE--NOT PLAINTEXT OR MARKDOWN.
     """
-    )
 
     print("Getting response...")
     response: Response | Dict[str, str] = get(GEMINI_URL)
