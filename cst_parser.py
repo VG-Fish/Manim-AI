@@ -79,12 +79,12 @@ class GeminiTransformer(cst.CSTTransformer):
                         value=m.Call(
                             func=m.Attribute(
                                 value=m.Name(
-                                  value='self',
+                                    value="self",
                                 ),
                                 attr=m.Name(
-                                  value='play',
+                                    value="play",
                                 ),
-                              ),
+                            ),
                             args=[
                                 m.ZeroOrMore(m.Arg()),
                                 m.Arg(value=m.Call(func=m.Name(value=node))),
@@ -127,9 +127,15 @@ class GeminiTransformer(cst.CSTTransformer):
         """
         if m.matches(
             original_node,
-            m.Arg(
-                value=m.Integer(),
-                keyword=m.Name(value="run_time"),
+            m.OneOf(
+                m.Arg(
+                    value=m.Integer(),
+                    keyword=m.Name(value="run_time"),
+                ),
+                m.Arg(
+                    value=m.Float(),
+                    keyword=m.Name(value="run_time"),
+                ),
             ),
         ):
             return RemoveFromParent()
@@ -154,9 +160,7 @@ def add_interactivity() -> None:
         "Rotate": ("click.wav", 1),
         "FadeOut": ("click.wav", 1),
     }
-    updated_cst: cst.Module = code.visit(
-        GeminiTransformer(sound_indicator_nodes)
-    )
+    updated_cst: cst.Module = code.visit(GeminiTransformer(sound_indicator_nodes))
 
     with open("generated_code.py", "w") as f:
         f.write(updated_cst.code)
