@@ -46,10 +46,10 @@ def main() -> None:
     # The multiline quote is unindented to provide more space to write.
     GEMINI_URL: str = f"""
 https://nova-motors-server.vercel.app/gemini?prompt=
-Your sole purpose is to convert natural language into Manim (a Python library for creating mathematical animations) code. 
-You will be given some text and must write valid Manim code to the best of your abilities. Remember to import all the
-necessary libraries, and DON'T code bugs and SOLELY OUTPUT PYTHON CODE--NOT PLAINTEXT OR MARKDOWN.
-This is the prompt: \"{args.prompt}\"
+Your sole purpose is to convert natural language into Manim code. 
+You will be given some text and must write valid Manim code to the best of your abilities.
+DON'T code bugs and SOLELY OUTPUT PYTHON CODE.
+The prompt: \"{args.prompt}\"
     """
 
     print("Getting response...")
@@ -59,9 +59,9 @@ This is the prompt: \"{args.prompt}\"
         print("Couldn't connect to the backend to generate the code.")
         return
 
-    response = response.json()
+    json: Dict = response.json()
 
-    code: str = response["candidates"][0]["content"]["parts"][0]["text"]
+    code: str = json["candidates"][0]["content"]["parts"][0]["text"]
     code = "\n".join(code.splitlines()[1:-1])
 
     print("Creating the interactive scene...")

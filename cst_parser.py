@@ -11,15 +11,14 @@ from libcst.display import dump
 from libcst import RemoveFromParent
 
 from typing import Dict, Tuple, Self, Union
-
-import wave
+import wave as w
 
 
 def get_audio_file_duration(sound_file_path: str) -> float:
     """
-    Returns the length of the given sound file path.
+    Returns the length of the given .wav sound file path.
     """
-    with wave.open(sound_file_path, "r") as f:
+    with w.open(sound_file_path, "r") as f:
         frames: int = f.getnframes()
         rate: int = f.getframerate()
         duration = frames / rate
@@ -35,9 +34,6 @@ class GeminiTransformer(cst.CSTTransformer):
         self: Self,
         sound_indicator_nodes: Dict[str, Tuple[str, float]],
     ) -> None:
-        """
-        This function initializes the class.
-        """
         self.sound_indicator_nodes: Dict[str, Tuple[str, float]] = sound_indicator_nodes
 
     def leave_FunctionDef(
@@ -127,15 +123,9 @@ class GeminiTransformer(cst.CSTTransformer):
         """
         if m.matches(
             original_node,
-            m.OneOf(
-                m.Arg(
-                    value=m.Integer(),
-                    keyword=m.Name(value="run_time"),
-                ),
-                m.Arg(
-                    value=m.Float(),
-                    keyword=m.Name(value="run_time"),
-                ),
+            m.Arg(
+                value=m.OneOf(m.Integer(), m.Float()),
+                keyword=m.Name(value="run_time"),
             ),
         ):
             return RemoveFromParent()
@@ -148,14 +138,12 @@ def add_interactivity() -> None:
     """
     with open("generated_code.py", "r") as f:
         code: Union[str, cst.Module] = f.read()
-    code = cst.parse_module(code)
+    code: cst.Module = cst.parse_module(code)
 
-    debug: bool = True
-    if debug:
-        with open("cst_full_debug.txt", "w") as f:
-            f.write(dump(code))
+    with open("cst_full_debug.txt", "w") as f:
+        f.write(dump(code))
 
-    sound_indicator_nodes: Dict[str, str] = {
+    sound_indicator_nodes: Dict[str, Tuple[str, int]] = {
         "Create": ("click.wav", 1),
         "Rotate": ("click.wav", 1),
         "FadeOut": ("click.wav", 1),
