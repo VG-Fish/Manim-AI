@@ -2,85 +2,127 @@
 # requires-python = ">=3.13"
 # dependencies = [
 #     "beautifulsoup4",
-#     "selenium",
-#     "selenium-stealth",
+#     "seleniumbase",
 # ]
 # ///
-from multiprocessing.managers import ListProxy, SyncManager
-from typing import List, Tuple
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
+import os
+import time
 from multiprocessing import Pool, Manager
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium_stealth import stealth
+from typing import List
+from urllib.parse import urljoin, urlparse
 
+from bs4 import BeautifulSoup
+from seleniumbase import Driver
 
-def scrape_site(args) -> List:
-    url, base_url, visited = args
-
+def scrape_page(args) -> List[str]:
+    """Scrape a single page and return new links discovered"""
+    url, base_domain, visited, output_file = args
+    
     if url in visited:
         return []
-
+    
     visited.append(url)
-    options = Options()
-    options.add_argument("--headless")  # optional, remove for GUI
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-
-    driver = webdriver.Chrome(options=options)
-
-    stealth(
-        driver,
-        languages=["en-US", "en"],
-        vendor="Google Inc.",
-        platform="Win32",
-        webgl_vendor="Intel Inc.",
-        renderer="Intel Iris OpenGL Engine",
-        fix_hairline=True,
-    )
-
+    print(f"Scraping: {url}")
+    
+    driver = Driver(browser="firefox", headless=True)
+    new_urls = []
+    
     try:
+        # Set page load timeout to avoid hanging on slow pages
+        driver.set_page_load_timeout(15)
         driver.get(url)
+        
+        # Wait for page to load
+        time.sleep(0.5)
+        
+        # Get page content
         html = driver.page_source
         soup = BeautifulSoup(html, "html.parser")
-
-        print(f"Scraping: {url}")
-        with open("manim_docs.txt", "a", encoding="utf-8") as f:
-            f.write(soup.get_text())
-
-        next_urls = []
+        
+        # Extract text and write to file
+        text_content = soup.get_text(separator="\n", strip=True)
+        with open(output_file, "a", encoding="utf-8") as f:
+            f.write(f"\n\n--- PAGE: {url} ---\n\n")
+            f.write(text_content)
+        
+        # Find all links on the page
         for link in soup.find_all("a", href=True):
-            next_url = urljoin(base_url, link["href"])
-            if urlparse(next_url).netloc == urlparse(base_url).netloc and next_url not in visited:
-                next_urls.append(next_url)
-        return next_urls
+            href = link["href"]
+            # Skip fragment links, javascript, etc.
+            if href.startswith("#") or href.startswith("javascript:") or href.startswith("mailto:"):
+                continue
+                
+            next_url = urljoin(url, href)
+            
+            # Only follow links on the same domain
+            if urlparse(next_url).netloc == base_domain and next_url not in visited:
+                new_urls.append(next_url)
+                
+        return new_urls
+        
     except Exception as e:
-        print(f"Failed to scrape {url}: {e}")
+        print(f"Error scraping {url}: {e}")
         return []
+        
     finally:
         driver.quit()
 
+def main():
+    # Configuration
+    start_url = "https://docs.manim.community/en/stable/"
+    output_file = "manim_docs.txt"
+    max_pages = 10000
+    num_workers = min(8, os.cpu_count() or 4)
+    
+    # Clear output file
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write(f"Website Scrape: {start_url}\nDate: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+    
+    # Setup multiprocessing resources
+    manager = Manager()
+    visited = manager.list()
+    base_domain = urlparse(start_url).netloc
+    
+    # Initialize URL queue
+    to_visit = [start_url]
+    
+    # Track statistics
+    start_time = time.time()
+    pages_scraped = 0
+    
+    # Create process pool
+    with Pool(processes=num_workers) as pool:
+        while to_visit and pages_scraped < max_pages:
+            # Prepare batch of URLs to process
+            batch_size = min(num_workers * 2, len(to_visit), max_pages - pages_scraped)
+            current_batch = to_visit[:batch_size]
+            to_visit = to_visit[batch_size:]
+            
+            # Create arguments for each URL
+            args = [(url, base_domain, visited, output_file) for url in current_batch]
+            
+            # Process URLs in parallel
+            results = pool.map(scrape_page, args)
+            
+            # Update statistics
+            pages_scraped += len(current_batch)
+            
+            # Add new URLs to queue
+            new_urls = [url for sublist in results for url in sublist if url not in visited]
+            to_visit.extend(new_urls)
+            
+            # Status update
+            elapsed = time.time() - start_time
+            pages_per_minute = (pages_scraped / elapsed) * 60 if elapsed > 0 else 0
+            print(f"Progress: {pages_scraped}/{max_pages} pages | Queue: {len(to_visit)} URLs | Speed: {pages_per_minute:.1f} pages/min")
+    
+    # Final statistics
+    total_time = time.time() - start_time
+    print(f"\nScraping completed!")
+    print(f"Pages scraped: {pages_scraped}")
+    print(f"Total time: {total_time:.1f} seconds")
+    print(f"Average speed: {pages_scraped / total_time * 60:.1f} pages per minute")
+    print(f"Content saved to: {output_file}")
 
 if __name__ == "__main__":
-    with open("manim_docs.txt", "w", encoding="utf-8") as f:
-        f.close()
-
-    start_url: str = "https://docs.manim.community/en/stable/"
-    base_url: str = start_url
-    manager: SyncManager = Manager()
-    visited: ListProxy[str] = manager.list()
-    to_scrape: List[str] = [start_url]
-    pool = Pool(processes=8)
-
-    while to_scrape:
-        args: List[Tuple[str, str, ListProxy[str]]] = [
-            (url, base_url, visited) for url in to_scrape
-        ]
-        results = pool.map(scrape_site, args)
-        to_scrape: List = list(
-            set(url for sublist in results for url in sublist if url not in visited)
-        )
-    pool.close()
-    pool.join()
+    main()
