@@ -47,8 +47,7 @@ def main() -> None:
 
     print("Getting response...")
 
-    PROMPT = \
-f"""Your sole purpose is to convert natural language into Manim code. 
+    PROMPT = f"""Your sole purpose is to convert natural language into Manim code. 
 You will be given some text and must write valid Manim code to the best of your abilities.
 DON'T code bugs and SOLELY OUTPUT PYTHON CODE.
 The prompt: {args.prompt}"""
@@ -58,7 +57,7 @@ The prompt: {args.prompt}"""
     if not response:
         print("Couldn't connect to the backend to generate the code.")
         return
-    
+
     json: Dict = response.json()
 
     if "error" in json:
