@@ -21,7 +21,7 @@ def scrape_site(url: str, base_url: str) -> None:
     soup: BeautifulSoup = BeautifulSoup(response.text, "html.parser")
     print(f"Scraping: {url}")
 
-    with open("manim_docs.txt", "w") as f:
+    with open("manim_docs.txt", "a") as f:
         f.write(soup.get_text())
     
     for link in soup.find_all("a", href=True):
