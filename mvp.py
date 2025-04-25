@@ -10,7 +10,7 @@
 # ]
 # ///
 
-from requests import get, Response
+from requests import post, Response
 from argparse import ArgumentParser, Namespace
 from subprocess import run
 from typing import Dict
@@ -28,7 +28,7 @@ def run_manim_code(code: str) -> None:
     try:
         run(["manim", "generated_code.py", "-p", "--renderer=opengl"])
     except FileNotFoundError:
-        print("Creating the interactive scene failed!")
+        print("Could not find the generated code file.")
 
 
 def main() -> None:
@@ -43,25 +43,29 @@ def main() -> None:
     )
     args: Namespace = parser.parse_args()
 
-    # The multiline quote is unindented to provide more space to write.
-    GEMINI_URL: str = f"""
-https://nova-motors-server.vercel.app/gemini?prompt=
-Your sole purpose is to convert natural language into Manim code. 
-You will be given some text and must write valid Manim code to the best of your abilities.
-DON'T code bugs and SOLELY OUTPUT PYTHON CODE.
-The prompt: \"{args.prompt}\"
-    """
+    GEMINI_URL: str = "https://gemini-wrapper-nine.vercel.app/gemini"
 
     print("Getting response...")
-    response: Response | Dict[str, str] = get(GEMINI_URL)
+
+    PROMPT = \
+f"""Your sole purpose is to convert natural language into Manim code. 
+You will be given some text and must write valid Manim code to the best of your abilities.
+DON'T code bugs and SOLELY OUTPUT PYTHON CODE.
+The prompt: {args.prompt}"""
+
+    response: Response | Dict[str, str] = post(GEMINI_URL, json={"prompt": PROMPT})
 
     if not response:
         print("Couldn't connect to the backend to generate the code.")
         return
-
+    
     json: Dict = response.json()
 
-    code: str = json["candidates"][0]["content"]["parts"][0]["text"]
+    if "error" in json:
+        print(json["error"])
+        return
+
+    code: str = json["output"]
     code = "\n".join(code.splitlines()[1:-1])
 
     print("Creating the interactive scene...")
