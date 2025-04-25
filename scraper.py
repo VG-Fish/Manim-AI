@@ -39,6 +39,9 @@ def scrape_site(args) -> List:
         return []
 
 if __name__ == "__main__":
+    with open("manim_docs.txt", "w", encoding="utf-8") as f:
+        f.close()
+    
     start_url: str = "https://docs.manim.community/en/stable/"
     base_url: str = start_url
     manager: SyncManager = Manager()
