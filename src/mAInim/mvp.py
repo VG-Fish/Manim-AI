@@ -13,7 +13,7 @@ from requests import post, Response
 from argparse import ArgumentParser, Namespace
 from subprocess import run
 from typing import Dict
-from cst_parser import add_interactivity
+from .cst_parser import add_interactivity
 
 
 def run_manim_code(code: str) -> None:
