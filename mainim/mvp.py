@@ -3,9 +3,8 @@
 # dependencies = [
 #     "ipython>=8.31.0",
 #     "latex>=0.7.0",
-#     "libcst>=1.6.0",
-#     "manim",
-#     "pygame>=2.6.1",
+#     "libcst>=1.7.0",
+#     "manim>=0.19.0",
 #     "requests",
 # ]
 # ///
@@ -49,7 +48,12 @@ def main() -> None:
 
     PROMPT = f"""Your sole purpose is to convert natural language into Manim code. 
 You will be given some text and must write valid Manim code to the best of your abilities.
-DON'T code bugs and SOLELY OUTPUT PYTHON CODE.
+DON'T code bugs and SOLELY OUTPUT PYTHON CODE. Import ALL the necessary libraries.
+Define ALL constants. After you generate your code, check to make sure that it can run.
+Ensure all the generated manim code is compatible with manim 0.19.0. DO NOT USE
+DEPRECATED CLASSES, such as "ParametricSurface." Ensure EVERY element in the scene is visually distinctive. 
+Define EVERY function you use. Write text at the top to explain what you're doing.
+REMEMBER, YOU MUST OUTPUT CODE THAT DOESN'T CAUSE BUGS. ASSUME YOUR CODE IS BUGGY, AND RECODE IT AGAIN.
 The prompt: {args.prompt}"""
 
     response: Response | Dict[str, str] = post(GEMINI_URL, json={"prompt": PROMPT})

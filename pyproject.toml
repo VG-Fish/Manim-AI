@@ -4,4 +4,15 @@ version = "0.1.0"
 description = "Merging Manim & AI."
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "manim>=0.19.0",
+    "latex>=0.7.0",
+    "libcst>=1.7.0",
+    "ipython>=8.31.0",
+    "requests",
+]
+
+[build-system]
+requires = ["setuptools>=80.0.0"]
+build-backend = "setuptools.build_meta"
+

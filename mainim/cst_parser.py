@@ -61,57 +61,57 @@ class GeminiTransformer(cst.CSTTransformer):
         """
         This function adds `self.add_sound(...)` after certain Manim function calls, such as `Create()` or `FadeOut()`.
         """
-        for child in original_node.children:
-            # This for loop matches specific nodes to add `self.add_sound(...)` after lines containing
-            # certain Manim function calls.
-            for node, (
-                sound_file_path,
-                intensity,
-            ) in self.sound_indicator_nodes.items():
-                # First type of function call to match for.
-                if m.matches(
-                    child,
-                    m.Expr(
-                        value=m.Call(
-                            func=m.Attribute(
-                                value=m.Name(
-                                    value="self",
-                                ),
-                                attr=m.Name(
-                                    value="play",
-                                ),
-                            ),
-                            args=[
-                                m.ZeroOrMore(m.Arg()),
-                                m.Arg(value=m.Call(func=m.Name(value=node))),
-                                m.ZeroOrMore(m.Arg()),
-                            ],
-                        )
-                    ),
-                ):
-                    run_time_arg = cst.Arg(
-                        value=cst.Float(
-                            value=str(get_audio_file_duration(sound_file_path))
-                        ),
-                        keyword=cst.Name(value="run_time"),
-                    )
-                    node_of_interest = updated_node.body[0]
-                    updated_args = node_of_interest.value.args + (run_time_arg,)
+        # for child in original_node.children:
+        #     # This for loop matches specific nodes to add `self.add_sound(...)` after lines containing
+        #     # certain Manim function calls.
+        #     for node, (
+        #         sound_file_path,
+        #         intensity,
+        #     ) in self.sound_indicator_nodes.items():
+        #         # First type of function call to match for.
+        #         if m.matches(
+        #             child,
+        #             m.Expr(
+        #                 value=m.Call(
+        #                     func=m.Attribute(
+        #                         value=m.Name(
+        #                             value="self",
+        #                         ),
+        #                         attr=m.Name(
+        #                             value="play",
+        #                         ),
+        #                     ),
+        #                     args=[
+        #                         m.ZeroOrMore(m.Arg()),
+        #                         m.Arg(value=m.Call(func=m.Name(value=node))),
+        #                         m.ZeroOrMore(m.Arg()),
+        #                     ],
+        #                 )
+        #             ),
+        #         ):
+        #             run_time_arg = cst.Arg(
+        #                 value=cst.Float(
+        #                     value=str(get_audio_file_duration(sound_file_path))
+        #                 ),
+        #                 keyword=cst.Name(value="run_time"),
+        #             )
+        #             node_of_interest = updated_node.body[0]
+        #             updated_args = node_of_interest.value.args + (run_time_arg,)
 
-                    updated_call = node_of_interest.value.with_changes(
-                        args=updated_args
-                    )
+        #             updated_call = node_of_interest.value.with_changes(
+        #                 args=updated_args
+        #             )
 
-                    updated_body = [
-                        node_of_interest.with_changes(value=updated_call)
-                    ] + list(updated_node.body[1:])
+        #             updated_body = [
+        #                 node_of_interest.with_changes(value=updated_call)
+        #             ] + list(updated_node.body[1:])
 
-                    updated_node = updated_node.with_changes(body=updated_body)
+        #             updated_node = updated_node.with_changes(body=updated_body)
 
-                    sound_code: cst.SimpleStatementLine = cst.parse_statement(
-                        f"self.add_sound('{sound_file_path}', {intensity})"
-                    )
-                    return cst.FlattenSentinel([sound_code, updated_node])
+        #             sound_code: cst.SimpleStatementLine = cst.parse_statement(
+        #                 f"self.add_sound('{sound_file_path}', {intensity})"
+        #             )
+        #             return cst.FlattenSentinel([sound_code, updated_node])
 
         return super().leave_SimpleStatementLine(original_node, updated_node)
 
