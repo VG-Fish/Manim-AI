@@ -136,7 +136,7 @@ def add_interactivity() -> None:
     """
     Adds interactivity to the generated Gemini code.
     """
-    with open("generated_code.py", "r") as f:
+    with open("mainim/generated_code.py", "r") as f:
         code: Union[str, cst.Module] = f.read()
     code: cst.Module = cst.parse_module(code)
 
@@ -150,7 +150,7 @@ def add_interactivity() -> None:
     }
     updated_cst: cst.Module = code.visit(GeminiTransformer(sound_indicator_nodes))
 
-    with open("generated_code.py", "w") as f:
+    with open("mainim/generated_code.py", "w") as f:
         f.write(updated_cst.code)
 
 
