@@ -25,7 +25,7 @@ def run_manim_code(code: str) -> None:
 
     print("Running the scene...")
     try:
-        run(["manim", "generated_code.py", "-p", "--renderer=opengl"])
+        run(["manim", "-pql", "generated_code.py", "--renderer=opengl"])
     except FileNotFoundError:
         print("Could not find the generated code file.")
 
