@@ -17,7 +17,7 @@ from .cst_parser import add_interactivity
 
 
 def run_manim_code(code: str) -> None:
-    with open("mainim/generated_code.py", "w") as f:
+    with open("generated_code.py", "w") as f:
         f.write(code)
 
     print("Adding interactivity...")
