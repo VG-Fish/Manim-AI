@@ -13,7 +13,7 @@ from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
 
 from os import getcwd, walk
-from os.path import join
+from os.path import join, dirname
 
 from subprocess import CalledProcessError
 
@@ -23,41 +23,49 @@ from httpx import AsyncClient, RequestError, Response
 
 from .cst_parser import add_interactivity
 
+from shutil import which
 
 async def run_manim_code(code: str, path: str = getcwd()) -> None:
     print("Adding interactivity...")
     add_interactivity(code, path)
 
     print("Running the scene...")
+    manim_path = which("manim")
+    if not manim_path:
+        print("Manim executable not found.")
+        return
+
+    # Full path to the code file
+    code_file = join(path, "generated_code.py")
+
     try:
         proc = await create_subprocess_exec(
-            "/Users/vishy/Desktop/mAInim_UI/.venv/bin/manim",
+            manim_path,
             "-ql",
-            f"{path}/generated_code.py",
+            code_file,
             "--renderer=opengl",
-            cwd=path,
             stdout=PIPE,
             stderr=PIPE,
         )
         stdout, stderr = await proc.communicate()
-
         print("STDOUT:", stdout.decode())
         print("STDERR:", stderr.decode())
 
-        output_path: str = join(path, "media", "videos")
-        for root, _, files in walk(output_path):
+        code_dir = dirname(code_file)
+
+        media_root = join(code_dir, "media", "videos")
+        for root, _, files in walk(media_root):
             for file in files:
                 if file.endswith(".mp4"):
-                    video_file = join(root, file)
-                    print(f"Opening {video_file}")
-                    await create_subprocess_exec("open", video_file)
+                    video_path = join(root, file)
+                    print(f"Opening video at: {video_path}")
+                    await create_subprocess_exec("open", video_path)
                     return
-        print("No video file found.")
-    except FileNotFoundError:
-        print("Could not find the generated code file.")
-    except CalledProcessError as e:
-        print(f"Error while running Manim: {e}")
 
+        print("Video file not found in:", media_root)
+
+    except Exception as e:
+        print(f"Error while running Manim: {e}")
 
 async def generate_video(prompt: str, path: str = getcwd()) -> None:
     GEMINI_URL: str = "https://gemini-wrapper-nine.vercel.app/gemini"
