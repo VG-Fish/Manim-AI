@@ -26,7 +26,7 @@ async def run_manim_code(code: str, path: str = getcwd()) -> None:
         import shutil
         print("Manim path:", shutil.which("manim"))
         proc = await create_subprocess_exec(
-            "manim", "-pql", f"{path}/generated_code.py", "--renderer=opengl"
+            "/Users/vishy/Desktop/mAInim_UI/.venv/bin/manim", "-pql", f"{path}/generated_code.py", "--renderer=opengl"
         )
         await proc.wait()
     except FileNotFoundError:
