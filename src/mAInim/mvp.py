@@ -43,6 +43,7 @@ async def run_manim_code(code: str, path: str = getcwd()) -> None:
             manim_path,
             "-ql",
             code_file,
+            "--media_dir", f"{path}/output_media",
             stdout=PIPE,
             stderr=PIPE,
         )
