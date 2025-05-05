@@ -24,7 +24,7 @@ async def run_manim_code(code: str, path: str = getcwd()) -> None:
     print("Running the scene...")
     try:
         proc = await create_subprocess_exec(
-            "manim", "-pql", "generated_code.py", "--renderer=opengl"
+            "manim", "-pql", f"{path}/generated_code.py", "--renderer=opengl"
         )
         await proc.wait()
     except FileNotFoundError:
