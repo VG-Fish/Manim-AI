@@ -23,6 +23,8 @@ async def run_manim_code(code: str, path: str = getcwd()) -> None:
 
     print("Running the scene...")
     try:
+        import shutil
+        print("Manim path:", shutil.which("manim"))
         proc = await create_subprocess_exec(
             "manim", "-pql", f"{path}/generated_code.py", "--renderer=opengl"
         )
