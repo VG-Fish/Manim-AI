@@ -53,7 +53,7 @@ async def run_manim_code(code: str, path: str = getcwd()) -> None:
 
         code_dir = dirname(code_file)
 
-        media_root = join(code_dir, "media", "videos")
+        media_root = join(code_dir, "output_media", "videos")
         for root, _, files in walk(media_root):
             for file in files:
                 if file.endswith(".mp4"):
