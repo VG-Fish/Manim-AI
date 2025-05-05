@@ -148,9 +148,6 @@ def add_interactivity(code: str) -> None:
     }
     updated_cst: cst.Module = code.visit(GeminiTransformer(sound_indicator_nodes))
 
-    with open("generated_code.py", "w") as f:
-        f.write(updated_cst.code)
+    # with open("generated_code.py", "w") as f:
+    #     f.write(updated_cst.code)
 
-
-if __name__ == "__main__":
-    add_interactivity()
