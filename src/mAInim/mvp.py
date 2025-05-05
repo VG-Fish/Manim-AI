@@ -10,7 +10,7 @@
 # ///
 
 import asyncio
-from httpx import AsyncClient, RequestError
+from httpx import AsyncClient, RequestError, Response
 from subprocess import CalledProcessError
 from typing import Dict
 from .cst_parser import add_interactivity
@@ -52,19 +52,20 @@ The prompt: {prompt}"""
 
     async with AsyncClient() as client:
         try:
-            response = await client.post(GEMINI_URL, json={"prompt": PROMPT})
+            response: Response = await client.post(GEMINI_URL, json={"prompt": PROMPT})
+            response.raise_for_status()
         except RequestError as e:
-            print(f"Error: {e}")
+            print(f"Error in getting the response: {e}")
             return
 
     if response.status_code != 200:
-        print(f"Error: {response.status_code}")
+        print(f"Status Code Error: {response.status_code}")
         return
 
     json: Dict = response.json()
 
     if "error" in json:
-        print(json["error"])
+        print(f"JSON Error: {json["error"]}")
         return
 
     code: str = json["output"]
