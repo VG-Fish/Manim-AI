@@ -10,10 +10,17 @@
 # ///
 
 from asyncio import create_subprocess_exec
-from os import getcwd
-from httpx import AsyncClient, RequestError, Response
+from asyncio.subprocess import PIPE
+
+from os import getcwd, walk
+from os.path import join
+
 from subprocess import CalledProcessError
+
 from typing import Dict
+
+from httpx import AsyncClient, RequestError, Response
+
 from .cst_parser import add_interactivity
 
 
@@ -23,12 +30,29 @@ async def run_manim_code(code: str, path: str = getcwd()) -> None:
 
     print("Running the scene...")
     try:
-        import shutil
-        print("Manim path:", shutil.which("manim"))
         proc = await create_subprocess_exec(
-            "/Users/vishy/Desktop/mAInim_UI/.venv/bin/manim", "-pql", f"{path}/generated_code.py", "--renderer=opengl"
+            "/Users/vishy/Desktop/mAInim_UI/.venv/bin/manim",
+            "-ql",
+            f"{path}/generated_code.py",
+            "--renderer=opengl",
+            cwd=path,
+            stdout=PIPE,
+            stderr=PIPE,
         )
-        await proc.wait()
+        stdout, stderr = await proc.communicate()
+
+        print("STDOUT:", stdout.decode())
+        print("STDERR:", stderr.decode())
+
+        output_path: str = join(path, "media", "videos")
+        for root, _, files in walk(output_path):
+            for file in files:
+                if file.endswith(".mp4"):
+                    video_file = join(root, file)
+                    print(f"Opening {video_file}")
+                    await create_subprocess_exec("open", video_file)
+                    return
+        print("No video file found.")
     except FileNotFoundError:
         print("Could not find the generated code file.")
     except CalledProcessError as e:
@@ -65,7 +89,7 @@ The prompt: {prompt}"""
     json: Dict = response.json()
 
     if "error" in json:
-        print(f"JSON Error: {json["error"]}")
+        print(f"JSON Error: {json['error']}")
         return
 
     code: str = json["output"]
