@@ -138,8 +138,8 @@ def add_interactivity(code: str) -> None:
     """
     code: cst.Module = cst.parse_module(code)
 
-    with open("cst_full_debug.txt", "w") as f:
-        f.write(dump(code))
+    # with open("cst_full_debug.txt", "w") as f:
+    #     f.write(dump(code))
 
     sound_indicator_nodes: Dict[str, Tuple[str, int]] = {
         "Create": ("click.wav", 1),
