@@ -132,12 +132,10 @@ class GeminiTransformer(cst.CSTTransformer):
         return updated_node
 
 
-def add_interactivity() -> None:
+def add_interactivity(code: str) -> None:
     """
     Adds interactivity to the generated Gemini code.
     """
-    with open("generated_code.py", "r") as f:
-        code: Union[str, cst.Module] = f.read()
     code: cst.Module = cst.parse_module(code)
 
     with open("cst_full_debug.txt", "w") as f:

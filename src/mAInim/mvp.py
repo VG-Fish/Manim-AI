@@ -17,11 +17,8 @@ from .cst_parser import add_interactivity
 
 
 async def run_manim_code(code: str) -> None:
-    with open("generated_code.py", "w") as f:
-        f.write(code)
-
     print("Adding interactivity...")
-    add_interactivity()
+    add_interactivity(code)
 
     print("Running the scene...")
     try:

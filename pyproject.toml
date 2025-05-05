@@ -1,6 +1,6 @@
 [project]
 name = "manim_ai"
-version = "0.3.1"
+version = "0.3.3"
 description = "Merging Manim & AI."
 readme = "README.md"
 requires-python = ">=3.13"
