@@ -151,3 +151,4 @@ def add_interactivity(code: str) -> None:
     # with open("generated_code.py", "w") as f:
     #     f.write(updated_cst.code)
 
+    print("Finished adding interactivity...")
