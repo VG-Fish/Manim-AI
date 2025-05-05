@@ -43,7 +43,6 @@ async def run_manim_code(code: str, path: str = getcwd()) -> None:
             manim_path,
             "-ql",
             code_file,
-            "--renderer=opengl",
             stdout=PIPE,
             stderr=PIPE,
         )
