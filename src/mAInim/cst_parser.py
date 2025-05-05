@@ -12,6 +12,7 @@ from libcst import RemoveFromParent
 
 from typing import Dict, Tuple, Self, Union
 import wave as w
+from os import getcwd
 
 
 def get_audio_file_duration(sound_file_path: str) -> float:
@@ -132,7 +133,7 @@ class GeminiTransformer(cst.CSTTransformer):
         return updated_node
 
 
-def add_interactivity(code: str) -> None:
+def add_interactivity(code: str, path: str = getcwd()) -> None:
     """
     Adds interactivity to the generated Gemini code.
     """
@@ -148,7 +149,8 @@ def add_interactivity(code: str) -> None:
     }
     updated_cst: cst.Module = code.visit(GeminiTransformer(sound_indicator_nodes))
 
-    # with open("generated_code.py", "w") as f:
-    #     f.write(updated_cst.code)
+    print(f"Writing to {path}/generated_code.py...")
+    with open(f"{path}/generated_code.py", "w") as f:
+        f.write(updated_cst.code)
 
     print("Finished adding interactivity...")

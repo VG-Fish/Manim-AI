@@ -9,20 +9,21 @@
 # ]
 # ///
 
-import asyncio
+from asyncio import create_subprocess_exec
+from os import getcwd
 from httpx import AsyncClient, RequestError, Response
 from subprocess import CalledProcessError
 from typing import Dict
 from .cst_parser import add_interactivity
 
 
-async def run_manim_code(code: str) -> None:
+async def run_manim_code(code: str, path: str = getcwd()) -> None:
     print("Adding interactivity...")
-    add_interactivity(code)
+    add_interactivity(code, path)
 
     print("Running the scene...")
     try:
-        proc = await asyncio.create_subprocess_exec(
+        proc = await create_subprocess_exec(
             "manim", "-pql", "generated_code.py", "--renderer=opengl"
         )
         await proc.wait()
@@ -32,7 +33,7 @@ async def run_manim_code(code: str) -> None:
         print(f"Error while running Manim: {e}")
 
 
-async def generate_video(prompt: str) -> None:
+async def generate_video(prompt: str, path: str = getcwd()) -> None:
     GEMINI_URL: str = "https://gemini-wrapper-nine.vercel.app/gemini"
 
     print("Getting response...")
@@ -69,4 +70,4 @@ The prompt: {prompt}"""
     code = "\n".join(code.splitlines()[1:-1])
 
     print("Creating the interactive scene...")
-    await run_manim_code(code)
+    await run_manim_code(code, path)
