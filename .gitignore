@@ -13,3 +13,5 @@ generated_code.py
 *.txt
 
 *.mp4
+
+output_media/
