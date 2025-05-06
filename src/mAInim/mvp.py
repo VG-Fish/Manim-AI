@@ -25,7 +25,6 @@ from shutil import which
 
 MANIM_LIBRARY_API: str = \
 """
-
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Current file: manimlib/config.py
@@ -4262,8 +4261,9 @@ async def run_manim_code(code: str, path: str = getcwd()) -> None:
         print("Manim executable not found.")
         return
 
-    # Full path to the code file
     code_file = join(path, "generated_code.py")
+
+    print(code[code.find("class ") + len("class ") + 1:])
 
     try:
         proc = await create_subprocess_exec(
@@ -4294,7 +4294,7 @@ async def run_manim_code(code: str, path: str = getcwd()) -> None:
     except Exception as e:
         print(f"Error while running Manim: {e}")
 
-async def generate_video(prompt: str, path: str = getcwd()) -> None:
+async def generate_video(prompt: str, path: str = getcwd(), use_local_model: bool = False) -> None:
     GEMINI_URL: str = "https://gemini-wrapper-nine.vercel.app/gemini"
 
     print("Getting response...")
@@ -4310,26 +4310,29 @@ REMEMBER, YOU MUST OUTPUT CODE THAT DOESN'T CAUSE BUGS. ASSUME YOUR CODE IS BUGG
 HERE IS ALL OF THE METHODS OF THE MANIM LIBRARY, MAKE SURE YOU USE THESE METHODS SOLELY: {MANIM_LIBRARY_API}
 The prompt: {prompt}"""
 
-    async with AsyncClient() as client:
-        try:
-            response: Response = await client.post(GEMINI_URL, json={"prompt": PROMPT})
-            response.raise_for_status()
-        except RequestError as e:
-            print(f"Error in getting the response: {e}")
+    if use_local_model:
+        pass
+    else:
+        async with AsyncClient() as client:
+            try:
+                response: Response = await client.post(GEMINI_URL, json={"prompt": PROMPT})
+                response.raise_for_status()
+            except RequestError as e:
+                print(f"Error in getting the response: {e}")
+                return
+
+        if response.status_code != 200:
+            print(f"Status Code Error: {response.status_code}")
             return
 
-    if response.status_code != 200:
-        print(f"Status Code Error: {response.status_code}")
-        return
+        json: Dict = response.json()
 
-    json: Dict = response.json()
+        if "error" in json:
+            print(f"JSON Error: {json['error']}")
+            return
 
-    if "error" in json:
-        print(f"JSON Error: {json['error']}")
-        return
-
-    code: str = json["output"]
-    code = "\n".join(code.splitlines()[1:-1])
+        code: str = json["output"]
+        code = "\n".join(code.splitlines()[1:-1])
 
     print("Creating the interactive scene...")
     await run_manim_code(code, path)
