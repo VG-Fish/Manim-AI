@@ -17,11 +17,14 @@ from asyncio.subprocess import PIPE
 from os import getcwd, walk
 from os.path import join, dirname
 
+from random import uniform
+from time import sleep
+
 from typing import Dict
 
 from httpx import AsyncClient, RequestError, Response
 
-from .cst_parser import add_interactivity
+from cst_parser import add_interactivity
 
 from shutil import which
 
@@ -5818,7 +5821,7 @@ async def run_manim_code(code: str, path: str = getcwd()) -> None:
     file_name: str = code[
         name_of_file_index + len("class ") : code.find("(", name_of_file_index)
     ]
-    print(file_name)
+    print(f"{file_name = }")
 
     print("Running the scene...")
     manim_path = which("manim")
@@ -5861,47 +5864,50 @@ async def run_manim_code(code: str, path: str = getcwd()) -> None:
 
 
 async def generate_video(
-    prompt: str, path: str = getcwd(), use_local_model: bool = False
+    prompt: str, path: str = getcwd(), use_local_model: bool = False, max_retries: int = 3
 ) -> None:
     GEMINI_URL: str = "https://gemini-wrapper-nine.vercel.app/gemini"
 
     print("Getting response...")
 
-    PROMPT: str = f"""Your sole purpose is to convert natural language into Manim code. 
-You will be given some text and must write valid Manim code to the best of your abilities.
-DON'T code bugs and SOLELY OUTPUT PYTHON CODE. Import ALL the necessary libraries.
-Define ALL constants. After you generate your code, check to make sure that it can run.
+    PROMPT: str = f"""
+Your sole purpose is to convert natural language into Manim code. 
+You will be given a prompt and you must write valid Manim code to the BEST of your abilities.
+Import ALL the necessary libraries.
+Define ALL constants. Before you write your code, you may think about what to write and redo your code.
+Once you have fininalized your submission, rewrite the code again but add this special marker before the code:
+<CODE>
 Ensure all the generated manim code is compatible with manim 0.19.0.
 Ensure EVERY element in the scene is visually distinctive. 
-Define EVERY function you use. Write text at the top to explain what you're doing.
-REMEMBER, YOU MUST OUTPUT CODE THAT DOESN'T CAUSE BUGS. ASSUME YOUR CODE IS BUGGY, AND RECODE IT AGAIN.
+REMEMBER, YOU MUST OUTPUT CODE WITH ZERO BUGS.
 HERE IS ALL OF THE METHODS OF THE MANIM LIBRARY, MAKE SURE YOU USE THESE METHODS SOLELY: 
-{MANIM_LIBRARY_API} AND CREATE ONLY ONE MANIM CLASS. 
-The prompt: {prompt}"""
+{MANIM_LIBRARY_API}
+Here is the prompt: {prompt}
+"""
 
     generated_code: str = ""
 
     if use_local_model:
         model: lms.LLM = lms.llm("deepseek-coder-v2-lite-instruct")
         prediction_stream: lms.PredictionStream = model.complete(PROMPT)
-        generated_code = prediction_stream.content
-
+        generated_code = prediction_stream.result()
     else:
-        async with AsyncClient() as client:
-            try:
-                response: Response = await client.post(
-                    GEMINI_URL, json={"prompt": PROMPT}
-                )
-                response.raise_for_status()
-            except RequestError as e:
-                print(f"Error in getting the response: {e}")
-                return
+        json: Dict = dict()
 
-        if response.status_code != 200:
-            print(f"Status Code Error: {response.status_code}")
-            return
-
-        json: Dict = response.json()
+        retry_delay: int = 1
+        for _ in range(max_retries):
+            async with AsyncClient() as client:
+                try:
+                    response: Response = await client.post(
+                        GEMINI_URL, json={"prompt": PROMPT}
+                    )
+                    response.raise_for_status()
+                    json = response.json()
+                except RequestError as e:
+                    print(f"Retrying and waiting for {retry_delay}s.")
+                    sleep(retry_delay)
+                    retry_delay *= 2
+                    retry_delay += uniform(0, 1) # to add jitter
 
         if "error" in json:
             print(f"JSON Error: {json['error']}")
@@ -5909,6 +5915,17 @@ The prompt: {prompt}"""
 
         generated_code = json["output"]
         generated_code = "\n".join(generated_code.splitlines()[1:-1])
+    
+    print(generated_code)
 
     print("Creating the interactive scene...")
     await run_manim_code(generated_code, path)
+
+
+import asyncio
+
+asyncio.run(
+    generate_video(
+        "Create a cool 3d surface by revolving it around the z-axis, and add a moving tangent plane at the end."
+    )
+)
