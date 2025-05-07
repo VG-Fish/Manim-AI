@@ -5,7 +5,9 @@
 #     "ipython>=8.31.0",
 #     "latex>=0.7.0",
 #     "libcst>=1.7.0",
+#     "lmstudio",
 #     "manim>=0.19.0",
+#     "openai",
 # ]
 # ///
 
@@ -24,8 +26,11 @@ from cst_parser import add_interactivity
 
 from shutil import which
 
+import lmstudio as lms
+
 MANIM_LIBRARY_API: str = \
 """
+
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
 Current file: manim/constants.py
@@ -59,15 +64,6 @@ class CapStyleType(Enum):
 
 Current file: manim/typing.py
 
-
-++++++++++++++++++++++++++++++++++++++++++++++++++
-
-Current file: manim/__main__.py
-
-def show_splash(ctx: click.Context, param: click.Option, value: str | None) -> None:
-def print_version_and_exit(ctx: click.Context, param: click.Option, value: str | None
-) -> None:
-def main(ctx: click.Context) -> None:
 
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -3842,180 +3838,6 @@ def generate_points(self) -> None:
 
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Current file: manim/mobject/three_d/three_dimensions.py
-
---------------------------------------------------
-
-class ThreeDVMobject(VMobject):
-
---------------------------------------------------
-
---------------------------------------------------
-
-class Surface(VGroup):
-
-def func(self, u: float, v: float) -> np.ndarray:
-def set_fill_by_checkerboard(self, *colors: Iterable[ParsableManimColor], opacity: float | None = None
-) -> Self:
-def set_fill_by_value(self,
-    axes: Mobject,
-    colorscale: list[ParsableManimColor] | ParsableManimColor | None = None,
-    axis: int = 2,
-    **kwargs,
-) -> Self:
---------------------------------------------------
-
---------------------------------------------------
-
-class Sphere(Surface):
-
-def func(self, u: float, v: float) -> np.ndarray:
---------------------------------------------------
-
---------------------------------------------------
-
-class Dot3D(Sphere):
-
---------------------------------------------------
-
---------------------------------------------------
-
-class Cube(VGroup):
-
-def generate_points(self) -> None:
---------------------------------------------------
-
---------------------------------------------------
-
-class Prism(Cube):
-
-def generate_points(self) -> None:
---------------------------------------------------
-
---------------------------------------------------
-
-class Cone(Surface):
-
-def func(self, u: float, v: float) -> np.ndarray:
-def get_start(self) -> np.ndarray:
-def get_end(self) -> np.ndarray:
-def set_direction(self, direction: np.ndarray) -> None:
-def get_direction(self) -> np.ndarray:
---------------------------------------------------
-
---------------------------------------------------
-
-class Cylinder(Surface):
-
-def func(self, u: float, v: float) -> np.ndarray:
-def add_bases(self) -> None:
-def set_direction(self, direction: np.ndarray) -> None:
-def get_direction(self) -> np.ndarray:
---------------------------------------------------
-
---------------------------------------------------
-
-class Line3D(Cylinder):
-
-def set_start_and_end_attrs(self, start: np.ndarray, end: np.ndarray, **kwargs
-) -> None:
-def pointify(self,
-    mob_or_point: Mobject | Point3DLike,
-    direction: Vector3D = None,
-) -> np.ndarray:
-def get_start(self) -> np.ndarray:
-def get_end(self) -> np.ndarray:
-def parallel_to(cls,
-    line: Line3D,
-    point: Vector3D = ORIGIN,
-    length: float = 5,
-    **kwargs,
-) -> Line3D:
-def perpendicular_to(cls,
-    line: Line3D,
-    point: Vector3D = ORIGIN,
-    length: float = 5,
-    **kwargs,
-) -> Line3D:
---------------------------------------------------
-
---------------------------------------------------
-
-class Arrow3D(Line3D):
-
-def get_end(self) -> np.ndarray:
---------------------------------------------------
-
---------------------------------------------------
-
-class Torus(Surface):
-
-def func(self, u: float, v: float) -> np.ndarray:
---------------------------------------------------
-
-
-++++++++++++++++++++++++++++++++++++++++++++++++++
-
-Current file: manim/mobject/three_d/three_d_utils.py
-
-def get_3d_vmob_gradient_start_and_end_points(vmob) -> tuple[Point3D, Point3D]:
-def get_3d_vmob_start_corner_index(vmob) -> Literal[0]:
-def get_3d_vmob_end_corner_index(vmob) -> int:
-def get_3d_vmob_start_corner(vmob) -> Point3D:
-def get_3d_vmob_end_corner(vmob) -> Point3D:
-def get_3d_vmob_unit_normal(vmob, point_index: int) -> Vector3D:
-def get_3d_vmob_start_corner_unit_normal(vmob) -> Vector3D:
-def get_3d_vmob_end_corner_unit_normal(vmob) -> Vector3D:
-
-++++++++++++++++++++++++++++++++++++++++++++++++++
-
-Current file: manim/mobject/three_d/polyhedra.py
-
---------------------------------------------------
-
-class Polyhedron(VGroup):
-
-def get_edges(self, faces_list: list[list[int]]) -> list[tuple[int, int]]:
-def create_faces(self,
-    face_coords: list[list[list | np.ndarray]],
-) -> VGroup:
-def update_faces(self, m: Mobject):
-def extract_face_coords(self) -> list[list[np.ndarray]]:
---------------------------------------------------
-
---------------------------------------------------
-
-class Tetrahedron(Polyhedron):
-
---------------------------------------------------
-
---------------------------------------------------
-
-class Octahedron(Polyhedron):
-
---------------------------------------------------
-
---------------------------------------------------
-
-class Icosahedron(Polyhedron):
-
---------------------------------------------------
-
---------------------------------------------------
-
-class Dodecahedron(Polyhedron):
-
---------------------------------------------------
-
---------------------------------------------------
-
-class ConvexHull3D(Polyhedron):
-
---------------------------------------------------
-
-
-++++++++++++++++++++++++++++++++++++++++++++++++++
-
 Current file: manim/mobject/graphing/functions.py
 
 --------------------------------------------------
@@ -5987,194 +5809,6 @@ class OpenGLSurfaceMesh(OpenGLVGroup):
 
 def init_points(self):
 --------------------------------------------------
-
-
-++++++++++++++++++++++++++++++++++++++++++++++++++
-
-Current file: manim/_config/utils.py
-
-def config_file_paths() -> list[Path]:
-def make_config_parser(custom_file: StrPath | None = None,
-) -> configparser.ConfigParser:
---------------------------------------------------
-
-class ManimConfig(MutableMapping):
-
-def update(self, obj: ManimConfig | dict[str, Any]) -> None:
-def copy(self) -> Self:
-def digest_parser(self, parser: configparser.ConfigParser) -> Self:
-def digest_args(self, args: argparse.Namespace) -> Self:
-def digest_file(self, filename: StrPath) -> Self:
-def preview(self) -> bool:
-def preview(self, value: bool) -> None:
-def show_in_file_browser(self) -> bool:
-def show_in_file_browser(self, value: bool) -> None:
-def progress_bar(self) -> str:
-def progress_bar(self, value: str) -> None:
-def log_to_file(self) -> bool:
-def log_to_file(self, value: bool) -> None:
-def notify_outdated_version(self) -> bool:
-def notify_outdated_version(self, value: bool) -> None:
-def write_to_movie(self) -> bool:
-def write_to_movie(self, value: bool) -> None:
-def save_last_frame(self) -> bool:
-def save_last_frame(self, value: bool) -> None:
-def write_all(self) -> bool:
-def write_all(self, value: bool) -> None:
-def save_pngs(self) -> bool:
-def save_pngs(self, value: bool) -> None:
-def save_as_gif(self) -> bool:
-def save_as_gif(self, value: bool) -> None:
-def save_sections(self) -> bool:
-def save_sections(self, value: bool) -> None:
-def enable_wireframe(self) -> bool:
-def enable_wireframe(self, value: bool) -> None:
-def force_window(self) -> bool:
-def force_window(self, value: bool) -> None:
-def no_latex_cleanup(self) -> bool:
-def no_latex_cleanup(self, value: bool) -> None:
-def preview_command(self) -> str:
-def preview_command(self, value: str) -> None:
-def verbosity(self) -> str:
-def verbosity(self, val: str) -> None:
-def format(self) -> str:
-def format(self, val: str) -> None:
-def ffmpeg_loglevel(self) -> str:
-def ffmpeg_loglevel(self, val: str) -> None:
-def media_embed(self) -> bool:
-def media_embed(self, value: bool) -> None:
-def media_width(self) -> str:
-def media_width(self, value: str) -> None:
-def pixel_width(self) -> int:
-def pixel_width(self, value: int) -> None:
-def pixel_height(self) -> int:
-def pixel_height(self, value: int) -> None:
-def aspect_ratio(self) -> int:
-def frame_height(self) -> float:
-def frame_height(self, value: float) -> None:
-def frame_width(self) -> float:
-def frame_width(self, value: float) -> None:
-def frame_y_radius(self) -> float:
-def frame_y_radius(self, value: float) -> None:
-def frame_x_radius(self) -> float:
-def frame_x_radius(self, value: float) -> None:
-def top(self) -> Vector3D:
-def bottom(self) -> Vector3D:
-def left_side(self) -> Vector3D:
-def right_side(self) -> Vector3D:
-def frame_rate(self) -> float:
-def frame_rate(self, value: float) -> None:
-def background_color(self) -> ManimColor:
-def background_color(self, value: Any) -> None:
-def from_animation_number(self) -> int:
-def from_animation_number(self, value: int) -> None:
-def upto_animation_number(self) -> int:
-def upto_animation_number(self, value: int) -> None:
-def max_files_cached(self) -> int:
-def max_files_cached(self, value: int) -> None:
-def window_monitor(self) -> int:
-def window_monitor(self, value: int) -> None:
-def flush_cache(self) -> bool:
-def flush_cache(self, value: bool) -> None:
-def disable_caching(self) -> bool:
-def disable_caching(self, value: bool) -> None:
-def disable_caching_warning(self) -> bool:
-def disable_caching_warning(self, value: bool) -> None:
-def movie_file_extension(self) -> str:
-def movie_file_extension(self, value: str) -> None:
-def background_opacity(self) -> float:
-def background_opacity(self, value: float) -> None:
-def frame_size(self) -> tuple[int, int]:
-def frame_size(self, value: tuple[int, int]) -> None:
-def quality(self) -> str | None:
-def quality(self, value: str | None) -> None:
-def transparent(self) -> bool:
-def transparent(self, value: bool) -> None:
-def dry_run(self) -> bool:
-def dry_run(self, val: bool) -> None:
-def renderer(self) -> RendererType:
-def renderer(self, value: str | RendererType) -> None:
-def media_dir(self) -> str:
-def media_dir(self, value: str | Path) -> None:
-def window_position(self) -> str:
-def window_position(self, value: str) -> None:
-def window_size(self) -> str:
-def window_size(self, value: str) -> None:
-def resolve_movie_file_extension(self, is_transparent: bool) -> None:
-def enable_gui(self) -> bool:
-def enable_gui(self, value: bool) -> None:
-def gui_location(self) -> tuple[Any]:
-def gui_location(self, value: tuple[Any]) -> None:
-def fullscreen(self) -> bool:
-def fullscreen(self, value: bool) -> None:
-def use_projection_fill_shaders(self) -> bool:
-def use_projection_fill_shaders(self, value: bool) -> None:
-def use_projection_stroke_shaders(self) -> bool:
-def use_projection_stroke_shaders(self, value: bool) -> None:
-def zero_pad(self) -> int:
-def zero_pad(self, value: int) -> None:
-def get_dir(self, key: str, **kwargs: Any) -> Path:
-def assets_dir(self) -> str:
-def assets_dir(self, value: str | Path) -> None:
-def log_dir(self) -> str:
-def log_dir(self, value: str | Path) -> None:
-def video_dir(self) -> str:
-def video_dir(self, value: str | Path) -> None:
-def sections_dir(self) -> str:
-def sections_dir(self, value: str | Path) -> None:
-def images_dir(self) -> str:
-def images_dir(self, value: str | Path) -> None:
-def text_dir(self) -> str:
-def text_dir(self, value: str | Path) -> None:
-def tex_dir(self) -> str:
-def tex_dir(self, value: str | Path) -> None:
-def partial_movie_dir(self) -> str:
-def partial_movie_dir(self, value: str | Path) -> None:
-def custom_folders(self) -> str:
-def custom_folders(self, value: str | Path) -> None:
-def input_file(self) -> str:
-def input_file(self, value: str | Path) -> None:
-def output_file(self) -> str:
-def output_file(self, value: str | Path) -> None:
-def scene_names(self) -> list[str]:
-def scene_names(self, value: list[str]) -> None:
-def tex_template(self) -> TexTemplate:
-def tex_template(self, val: TexTemplate) -> None:
-def tex_template_file(self) -> Path:
-def tex_template_file(self, val: str) -> None:
-def plugins(self) -> list[str]:
-def plugins(self, value: list[str]):
---------------------------------------------------
-
---------------------------------------------------
-
-class ManimFrame(Mapping):
-
---------------------------------------------------
-
-
-++++++++++++++++++++++++++++++++++++++++++++++++++
-
-Current file: manim/_config/logger_utils.py
-
-def make_logger(parser: configparser.SectionProxy,
-    verbosity: str,
-) -> tuple[logging.Logger, Console, Console]:
-def parse_theme(parser: configparser.SectionProxy) -> Theme:
-def set_file_logger(scene_name: str, module_name: str, log_dir: Path) -> None:
---------------------------------------------------
-
-class JSONFormatter(logging):
-
-def format(self, record: logging.LogRecord) -> str:
---------------------------------------------------
-
-
-++++++++++++++++++++++++++++++++++++++++++++++++++
-
-Current file: manim/_config/cli_colors.py
-
-def parse_cli_ctx(parser: configparser.SectionProxy) -> dict[str, Any]:
 """
 async def run_manim_code(code: str, path: str = getcwd()) -> None:
     print("Adding interactivity...")
@@ -6239,8 +5873,13 @@ HERE IS ALL OF THE METHODS OF THE MANIM LIBRARY, MAKE SURE YOU USE THESE METHODS
 {MANIM_LIBRARY_API} AND CREATE ONLY ONE MANIM CLASS. 
 The prompt: {prompt}"""
 
+    generated_code: str = ""
+
     if use_local_model:
-        pass
+        model: lms.LLM = lms.llm("deepseek-coder-v2-lite-instruct")
+        prediction_stream: lms.PredictionStream = model.complete(PROMPT)
+        generated_code = prediction_stream.content
+
     else:
         async with AsyncClient() as client:
             try:
@@ -6260,10 +5899,10 @@ The prompt: {prompt}"""
             print(f"JSON Error: {json['error']}")
             return
 
-        code: str = json["output"]
-        code = "\n".join(code.splitlines()[1:-1])
+        generated_code = json["output"]
+        generated_code = "\n".join(generated_code.splitlines()[1:-1])
 
     print("Creating the interactive scene...")
-    await run_manim_code(code, path)
+    await run_manim_code(generated_code, path)
 
-asyncio.run(generate_video("Create a cool 3d surface."))
+asyncio.run(generate_video("Create a cool 3d surface.", use_local_model=False))

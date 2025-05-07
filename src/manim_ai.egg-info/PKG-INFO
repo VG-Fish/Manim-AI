@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: manim_ai
-Version: 0.4.1
+Version: 0.4.2
 Summary: Merging Manim & AI.
 Requires-Python: >=3.13
 Description-Content-Type: text/markdown
@@ -9,5 +9,6 @@ Requires-Dist: latex>=0.7.0
 Requires-Dist: libcst>=1.7.0
 Requires-Dist: ipython>=8.31.0
 Requires-Dist: httpx>=0.28.1
+Requires-Dist: lmstudio>=1.3.0
 
 # The goal of this project is to create an educational math tool.

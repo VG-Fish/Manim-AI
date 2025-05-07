@@ -1,6 +1,6 @@
 [project]
 name = "manim_ai"
-version = "0.4.1"
+version = "0.4.2"
 description = "Merging Manim & AI."
 readme = "README.md"
 requires-python = ">=3.13"
@@ -10,6 +10,7 @@ dependencies = [
     "libcst>=1.7.0",
     "ipython>=8.31.0",
     "httpx>=0.28.1",
+    "lmstudio>=1.3.0",
 ]
 
 [build-system]
