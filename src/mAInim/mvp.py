@@ -27,8 +27,7 @@ from shutil import which
 
 import lmstudio as lms
 
-MANIM_LIBRARY_API: str = \
-"""
+MANIM_LIBRARY_API: str = """
 
 ++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -5809,12 +5808,17 @@ class OpenGLSurfaceMesh(OpenGLVGroup):
 def init_points(self):
 --------------------------------------------------
 """
+
+
 async def run_manim_code(code: str, path: str = getcwd()) -> None:
     print("Adding interactivity...")
     add_interactivity(code, path)
 
     name_of_file_index: str = code.find("class ")
-    file_name: str = code[name_of_file_index + len("class "):code.find("(", name_of_file_index)]
+    file_name: str = code[
+        name_of_file_index + len("class ") : code.find("(", name_of_file_index)
+    ]
+    print(file_name)
 
     print("Running the scene...")
     manim_path = which("manim")
@@ -5824,13 +5828,13 @@ async def run_manim_code(code: str, path: str = getcwd()) -> None:
 
     code_file = join(path, "generated_code.py")
 
-
     try:
         proc = await create_subprocess_exec(
             manim_path,
             "-ql",
             code_file,
-            "--media_dir", f"{path}/output_media",
+            "--media_dir",
+            f"{path}/output_media",
             file_name,
             stdout=PIPE,
             stderr=PIPE,
@@ -5855,11 +5859,14 @@ async def run_manim_code(code: str, path: str = getcwd()) -> None:
     except Exception as e:
         print(f"Error while running Manim: {e}")
 
-async def generate_video(prompt: str, path: str = getcwd(), use_local_model: bool = False) -> None:
+
+async def generate_video(
+    prompt: str, path: str = getcwd(), use_local_model: bool = False
+) -> None:
     GEMINI_URL: str = "https://gemini-wrapper-nine.vercel.app/gemini"
 
     print("Getting response...")
-    
+
     PROMPT: str = f"""Your sole purpose is to convert natural language into Manim code. 
 You will be given some text and must write valid Manim code to the best of your abilities.
 DON'T code bugs and SOLELY OUTPUT PYTHON CODE. Import ALL the necessary libraries.
@@ -5882,7 +5889,9 @@ The prompt: {prompt}"""
     else:
         async with AsyncClient() as client:
             try:
-                response: Response = await client.post(GEMINI_URL, json={"prompt": PROMPT})
+                response: Response = await client.post(
+                    GEMINI_URL, json={"prompt": PROMPT}
+                )
                 response.raise_for_status()
             except RequestError as e:
                 print(f"Error in getting the response: {e}")
