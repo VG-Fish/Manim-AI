@@ -39,6 +39,9 @@ class GeminiTransformer(cst.CSTTransformer):
         self.sound_indicator_nodes: Dict[str, Tuple[str, float]] = sound_indicator_nodes
 
     def leave_Module(self, _: cst.Module, updated_node: cst.Module) -> cst.Module:
+        if "OpenGLSurface" not in updated_node.code:
+            return updated_node
+        
         import_statement: cst.Import = cst.parse_statement(
             "from manim.mobject.opengl.opengl_three_dimensions import OpenGLSurface"
         )
