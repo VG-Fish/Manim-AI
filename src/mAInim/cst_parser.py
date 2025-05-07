@@ -7,6 +7,7 @@
 
 import libcst as cst
 import libcst.matchers as m
+
 from libcst.display import dump
 from libcst import RemoveFromParent
 
@@ -36,6 +37,13 @@ class GeminiTransformer(cst.CSTTransformer):
         sound_indicator_nodes: Dict[str, Tuple[str, float]],
     ) -> None:
         self.sound_indicator_nodes: Dict[str, Tuple[str, float]] = sound_indicator_nodes
+
+    def leave_Module(self, _: cst.Module, updated_node: cst.Module) -> cst.Module:
+        import_statement: cst.Import = cst.parse_statement(
+            "from manim.mobject.opengl.opengl_three_dimensions import OpenGLSurface"
+        )
+        new_body = [import_statement, *list(updated_node.body)]
+        return updated_node.with_changes(body=new_body)
 
     def leave_FunctionDef(
         self: Self, original_node: cst.FunctionDef, updated_node: cst.FunctionDef
