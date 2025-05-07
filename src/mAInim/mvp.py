@@ -13,7 +13,6 @@
 
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
-import asyncio
 
 from os import getcwd, walk
 from os.path import join, dirname
@@ -22,7 +21,7 @@ from typing import Dict
 
 from httpx import AsyncClient, RequestError, Response
 
-from cst_parser import add_interactivity
+from .cst_parser import add_interactivity
 
 from shutil import which
 
@@ -5904,5 +5903,3 @@ The prompt: {prompt}"""
 
     print("Creating the interactive scene...")
     await run_manim_code(generated_code, path)
-
-asyncio.run(generate_video("Create a cool 3d surface.", use_local_model=False))
