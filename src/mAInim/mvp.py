@@ -5870,13 +5870,14 @@ async def generate_video(
 
     print("Getting response...")
 
+    CODE_TOKEN: str = "$CODE"
     PROMPT: str = f"""
-Your sole purpose is to convert natural language into Manim code. 
+Your sole purpose is to convert natural language into Manim code.
 You will be given a prompt and you must write valid Manim code to the BEST of your abilities.
 Import ALL the necessary libraries.
 Define ALL constants. Before you write your code, you may think about what to write and redo your code.
 Once you have fininalized your submission, rewrite the code again but add this special marker BEFORE 
-your finalized code: $CODE
+your finalized code: {CODE_TOKEN}
 Ensure all the generated manim code is compatible with manim 0.19.0.
 Ensure EVERY element in the scene is visually distinctive. 
 REMEMBER, YOU MUST OUTPUT CODE WITH ZERO BUGS.
@@ -5918,9 +5919,10 @@ Here is the prompt: {prompt}
             return
         
         generated_code = json["output"]
-        generated_code = "\n".join(generated_code.splitlines()[1:-1])
     
-    print(generated_code)
+    generated_code = generated_code[generated_code.rfind(CODE_TOKEN) + len(CODE_TOKEN): ]
+    generated_code = generated_code.replace("```python", "")
+    generated_code = generated_code.replace("```", "")
 
     print("Creating the interactive scene...")
     await run_manim_code(generated_code, path)
@@ -5930,7 +5932,7 @@ import asyncio
 
 asyncio.run(
     generate_video(
-        "Create a cool 3d surface by revolving it around the z-axis, and add a moving tangent plane at the end.",
-    max_retries=5
+        "Create a cool animation.",
+        max_retries=5
     )
 )
